@@ -1,0 +1,6 @@
+{
+  "name": "Organic Healthy Food Delivery",
+  "description": "Premium healthy food and smoothies delivery website with physical shop information and instant WhatsApp ordering.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
