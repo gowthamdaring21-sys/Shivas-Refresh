@@ -87,6 +87,15 @@ export default function AdminDashboard({
 }: AdminDashboardProps) {
   const [activeTab, setActiveTab] = useState<"overview" | "menu" | "orders" | "settings">("overview");
 
+  const handleHidePortalButton = () => {
+    try {
+      localStorage.removeItem("shiva_refresh_show_chef_button");
+      window.location.href = window.location.origin + window.location.pathname;
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   // Filter and search menu state
   const [menuSearch, setMenuSearch] = useState("");
   const [menuFilterCategory, setMenuFilterCategory] = useState("all");
@@ -1072,6 +1081,19 @@ export default function AdminDashboard({
                   className="bg-[#061813] border border-[#0D2d20] focus:border-[#0DFF92]/50 text-stone-100 p-3 rounded-xl focus:outline-none h-24 resize-none leading-relaxed"
                   placeholder="At Shiva Refresh, we believe that good health..."
                 />
+              </div>
+
+              {/* Device Security */}
+              <div className="flex flex-col gap-2 border-t border-[#0D2d20] pt-6 mt-2">
+                <label className="text-stone-400 font-extrabold uppercase font-mono tracking-wider">Device Security</label>
+                <p className="text-[10px] text-stone-500 mb-2">If you are logged in on a shared or public device, click below to hide the Chef Portal entrance lock icon from this browser. You can reveal it again anytime using the logo gesture or secret query link.</p>
+                <button
+                  type="button"
+                  onClick={handleHidePortalButton}
+                  className="bg-red-950/20 text-red-400 hover:bg-red-950/40 hover:text-red-300 border border-red-900/30 text-xs font-manrope font-bold p-3.5 rounded-xl transition-all cursor-pointer self-start"
+                >
+                  🔒 Remove Portal Entry Button from this Browser
+                </button>
               </div>
 
               <button

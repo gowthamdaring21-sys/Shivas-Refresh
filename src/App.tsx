@@ -58,6 +58,38 @@ export default function App() {
     window.location.hostname.includes("127.0.0.1")
   );
 
+  // Hidden Chef Portal visibility state
+  const [showChefButton, setShowChefButton] = useState(() => {
+    try {
+      if (typeof window !== "undefined") {
+        const params = new URLSearchParams(window.location.search);
+        if (params.has("chef") || params.has("admin") || params.has("owner")) {
+          localStorage.setItem("shiva_refresh_show_chef_button", "true");
+          return true;
+        }
+        return localStorage.getItem("shiva_refresh_show_chef_button") === "true";
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    return false;
+  });
+
+  const logoClicksRef = useRef(0);
+  const handleLogoClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    logoClicksRef.current += 1;
+    if (logoClicksRef.current >= 5) {
+      setShowChefButton(true);
+      try {
+        localStorage.setItem("shiva_refresh_show_chef_button", "true");
+      } catch (err) {
+        console.error(err);
+      }
+      logoClicksRef.current = 0;
+    }
+  };
+
   // Navigation / Scroll state
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -420,7 +452,7 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center">
             {/* Logo */}
-            <a href="#" className="flex items-center gap-2 group">
+            <a href="#" onClick={handleLogoClick} className="flex items-center gap-2 group">
               <div className="bg-deep-green text-cream-white p-2.5 rounded-full group-hover:rotate-12 transition-transform duration-300 shadow-sm">
                 <Leaf className="w-5 h-5 text-lime-green" />
               </div>
@@ -487,15 +519,17 @@ export default function App() {
               </button>
 
               {/* Chef Portal Toggle button */}
-              <button
-                id="chef-portal-toggle"
-                onClick={() => setPasscodeModalOpen(true)}
-                className="relative p-2.5 rounded-full transition-all duration-300 flex items-center gap-1.5 group bg-deep-green/5 hover:bg-deep-green/10 text-deep-green cursor-pointer"
-                title="Chef Portal"
-              >
-                <Lock className="w-5 h-5 group-hover:scale-110 transition-transform text-deep-green" />
-                <span className="text-xs font-bold font-manrope hidden xl:inline">Chef Portal</span>
-              </button>
+              {showChefButton && (
+                <button
+                  id="chef-portal-toggle"
+                  onClick={() => setPasscodeModalOpen(true)}
+                  className="relative p-2.5 rounded-full transition-all duration-300 flex items-center gap-1.5 group bg-deep-green/5 hover:bg-deep-green/10 text-deep-green cursor-pointer"
+                  title="Chef Portal"
+                >
+                  <Lock className="w-5 h-5 group-hover:scale-110 transition-transform text-deep-green" />
+                  <span className="text-xs font-bold font-manrope hidden xl:inline">Chef Portal</span>
+                </button>
+              )}
 
               {/* Sticky WhatsApp Header Button */}
               <a
@@ -543,19 +577,21 @@ export default function App() {
               <span>Browse Menu</span>
               <ChevronRight className="w-5 h-5 text-fresh-green" />
             </a>
-            <button
-              onClick={() => {
-                setMobileMenuOpen(false);
-                setPasscodeModalOpen(true);
-              }}
-              className="hover:text-lime-green text-left w-full transition-colors flex items-center justify-between border-b border-white/5 pb-3 text-xl font-manrope font-medium cursor-pointer"
-            >
-              <span className="flex items-center gap-2">
-                <ChefHat className="w-5 h-5 text-lime-green" />
-                Chef's Portal
-              </span>
-              <ChevronRight className="w-5 h-5 text-fresh-green" />
-            </button>
+            {showChefButton && (
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  setPasscodeModalOpen(true);
+                }}
+                className="hover:text-lime-green text-left w-full transition-colors flex items-center justify-between border-b border-white/5 pb-3 text-xl font-manrope font-medium cursor-pointer"
+              >
+                <span className="flex items-center gap-2">
+                  <ChefHat className="w-5 h-5 text-lime-green" />
+                  Chef's Portal
+                </span>
+                <ChevronRight className="w-5 h-5 text-fresh-green" />
+              </button>
+            )}
             <a
               href="#health-zone"
               onClick={() => {
