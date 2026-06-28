@@ -1,0 +1,1578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shiva Refresh - Final Presentation (Week 4)</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&family=Plus+Jakarta+Sans:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <style>
+    :root {
+      --bg-color: #06110e;
+      --card-bg: #0c1c18;
+      --border-color: #123028;
+      --accent-color: #71e513;
+      --accent-glow: rgba(113, 229, 19, 0.15);
+      --text-main: #f0fdf4;
+      --text-muted: #8ba89f;
+      --font-header: 'Outfit', sans-serif;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      font-family: var(--font-body);
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Presentation Container */
+    .presentation-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      max-width: 1920px;
+      max-height: 1080px;
+      aspect-ratio: 16 / 9;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 3vw;
+    }
+
+    /* Slides wrapper */
+    .slides-wrapper {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      overflow: hidden;
+    }
+
+    /* Slide Base Style */
+    .slide {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.4s ease, visibility 0.4s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 4.5% 6% 4.5% 6%;
+      z-index: 1;
+    }
+
+    .slide.active {
+      opacity: 1;
+      visibility: visible;
+      z-index: 2;
+    }
+
+    /* Slide Header */
+    .slide-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 1px solid rgba(18, 48, 40, 0.4);
+      padding-bottom: 2%;
+      margin-bottom: 2%;
+    }
+
+    .slide-title-area h2 {
+      font-family: var(--font-header);
+      font-size: 2.2vw;
+      font-weight: 800;
+      color: var(--text-main);
+      letter-spacing: -0.02em;
+    }
+
+    .slide-title-area h3 {
+      font-family: var(--font-header);
+      font-size: 1vw;
+      font-weight: 600;
+      color: var(--accent-color);
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      margin-top: 0.3vw;
+    }
+
+    .slide-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.5vw;
+      font-family: var(--font-header);
+      font-size: 1.1vw;
+      font-weight: 900;
+      color: var(--text-main);
+    }
+
+    .slide-logo span {
+      color: var(--accent-color);
+    }
+
+    /* Slide Content Grid & Layouts */
+    .slide-body {
+      flex-grow: 1;
+      display: flex;
+      gap: 3vw;
+      align-items: center;
+      justify-content: center;
+      min-height: 0; /* allows content to shrink */
+    }
+
+    /* Footer styling */
+    .slide-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid rgba(18, 48, 40, 0.4);
+      padding-top: 1.5%;
+      margin-top: 2%;
+      font-family: var(--font-header);
+      font-size: 0.8vw;
+      color: var(--text-muted);
+    }
+
+    .slide-footer-left {
+      display: flex;
+      gap: 2vw;
+    }
+
+    /* UI Cards / Columns (PDF style) */
+    .grid-3col {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2vw;
+      width: 100%;
+    }
+
+    .info-card {
+      background: rgba(6, 17, 14, 0.6);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.8vw;
+      display: flex;
+      flex-direction: column;
+      gap: 1vw;
+      transition: border-color 0.3s ease;
+    }
+
+    .info-card:hover {
+      border-color: var(--accent-color);
+    }
+
+    .info-card-icon {
+      background-color: var(--accent-glow);
+      border: 1px solid rgba(113, 229, 19, 0.3);
+      width: 2.8vw;
+      height: 2.8vw;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent-color);
+    }
+
+    .info-card-icon svg {
+      width: 1.4vw;
+      height: 1.4vw;
+    }
+
+    .info-card-title {
+      font-family: var(--font-header);
+      font-size: 1.25vw;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .info-card-desc {
+      font-size: 0.9vw;
+      line-height: 1.6;
+      color: var(--text-muted);
+    }
+
+    /* Split Slide Layouts */
+    .split-left {
+      flex: 1.1;
+      display: flex;
+      flex-direction: column;
+      gap: 1.2vw;
+      justify-content: center;
+    }
+
+    .split-right {
+      flex: 0.9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Visual elements / Mockups */
+    .preview-box {
+      background-color: #050a09;
+      border: 1px dashed var(--border-color);
+      border-radius: 16px;
+      width: 100%;
+      height: 100%;
+      max-height: 24vw;
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+    }
+
+    /* Large lists */
+    .bullet-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.8vw;
+    }
+
+    .bullet-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.8vw;
+      font-size: 0.95vw;
+      line-height: 1.5;
+    }
+
+    .bullet-item svg {
+      color: var(--accent-color);
+      width: 1.1vw;
+      height: 1.1vw;
+      margin-top: 0.2vw;
+      flex-shrink: 0;
+    }
+
+    .bullet-bold {
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    /* Title Slide Customization */
+    .slide-title-layout {
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      gap: 2vw;
+      padding: 0 10%;
+    }
+
+    .main-title {
+      font-family: var(--font-header);
+      font-size: 4.8vw;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+    }
+
+    .main-title span {
+      color: var(--accent-color);
+      text-shadow: 0 0 40px rgba(113, 229, 19, 0.3);
+    }
+
+    .main-subtitle {
+      font-family: var(--font-body);
+      font-size: 1.5vw;
+      color: var(--text-muted);
+      max-width: 45vw;
+      margin: 1vw auto 2vw auto;
+      line-height: 1.5;
+    }
+
+    .presenter-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 1.5vw;
+      background: var(--accent-glow);
+      border: 1px solid rgba(113, 229, 19, 0.2);
+      border-radius: 50px;
+      padding: 0.6vw 1.8vw;
+      font-family: var(--font-header);
+      font-size: 1vw;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .presenter-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4vw;
+    }
+
+    .presenter-item svg {
+      width: 1vw;
+      height: 1vw;
+      color: var(--accent-color);
+    }
+
+    .title-footer {
+      font-family: var(--font-header);
+      font-size: 0.9vw;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-top: 3vw;
+    }
+
+    /* Table layout */
+    .slide-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85vw;
+    }
+
+    .slide-table th {
+      font-family: var(--font-header);
+      color: var(--accent-color);
+      font-weight: 700;
+      text-align: left;
+      padding: 1.1vw 1.3vw;
+      border-bottom: 2px solid var(--border-color);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .slide-table td {
+      padding: 1.1vw 1.3vw;
+      border-bottom: 1px solid rgba(18, 48, 40, 0.4);
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .slide-table tr:hover td {
+      color: var(--text-main);
+      background-color: rgba(18, 48, 40, 0.15);
+    }
+
+    .slide-table td strong {
+      color: var(--text-main);
+    }
+
+    /* Flow Chart visual style */
+    .flow-chart {
+      display: flex;
+      flex-direction: column;
+      gap: 1.2vw;
+      width: 85%;
+    }
+
+    .flow-node {
+      background: rgba(12, 28, 24, 0.8);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1vw;
+      display: flex;
+      align-items: center;
+      gap: 1vw;
+      position: relative;
+    }
+
+    .flow-node-icon {
+      background: var(--accent-glow);
+      color: var(--accent-color);
+      width: 2.2vw;
+      height: 2.2vw;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .flow-node-icon svg {
+      width: 1.1vw;
+      height: 1.1vw;
+    }
+
+    .flow-node-text h4 {
+      font-family: var(--font-header);
+      font-size: 0.95vw;
+      color: var(--text-main);
+    }
+
+    .flow-node-text p {
+      font-size: 0.75vw;
+      color: var(--text-muted);
+      margin-top: 0.1vw;
+    }
+
+    .flow-arrow {
+      display: flex;
+      justify-content: center;
+      color: var(--accent-color);
+      opacity: 0.5;
+    }
+
+    .flow-arrow svg {
+      width: 1.2vw;
+      height: 1.2vw;
+    }
+
+    /* Phone Mockup visual */
+    .phone-mockup {
+      width: 12.5vw;
+      height: 23vw;
+      border: 6px solid #1f2937;
+      border-radius: 28px;
+      background-color: #0b0f19;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      font-family: system-ui;
+    }
+
+    .phone-notch {
+      width: 5vw;
+      height: 0.8vw;
+      background-color: #1f2937;
+      border-radius: 0 0 10px 10px;
+      margin: 0 auto;
+      flex-shrink: 0;
+    }
+
+    .phone-content {
+      padding: 0.8vw;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.8vw;
+      font-size: 0.65vw;
+    }
+
+    .chat-bubble {
+      background-color: #1f2d3d;
+      border-radius: 8px;
+      padding: 0.6vw;
+      color: white;
+      max-width: 90%;
+      line-height: 1.3;
+    }
+
+    .chat-bubble.out {
+      background-color: #075e54;
+      align-self: flex-end;
+      border-bottom-right-radius: 2px;
+    }
+
+    /* Schema designer */
+    .schema-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.2vw;
+      width: 100%;
+    }
+
+    .schema-card {
+      background: rgba(6, 17, 14, 0.4);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1vw 1.2vw;
+    }
+
+    .schema-key {
+      font-family: var(--font-mono);
+      font-size: 0.8vw;
+      color: var(--accent-color);
+      font-weight: 700;
+    }
+
+    .schema-type {
+      font-size: 0.7vw;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 600;
+      margin-left: 0.5vw;
+    }
+
+    .schema-desc {
+      font-size: 0.8vw;
+      color: var(--text-muted);
+      margin-top: 0.4vw;
+      line-height: 1.4;
+    }
+
+    /* Dashboard Mockup Grid */
+    .dash-mock {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6vw;
+      width: 100%;
+      background: #091210;
+      border: 1.5px solid var(--border-color);
+      border-radius: 12px;
+      padding: 0.8vw;
+    }
+
+    .dash-mock-top {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 0.4vw;
+    }
+
+    .dash-mock-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.6vw;
+    }
+
+    .dash-mock-card {
+      background: var(--card-bg);
+      border: 1px solid rgba(18, 48, 40, 0.6);
+      padding: 0.6vw;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    /* Code blocks container */
+    .code-container {
+      background: #030806;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      width: 100%;
+      padding: 1.5vw;
+      overflow-x: auto;
+      text-align: left;
+    }
+
+    .code-container pre {
+      font-family: var(--font-mono);
+      font-size: 0.72vw;
+      line-height: 1.5;
+      color: #92d6c1;
+    }
+
+    /* Key Numbers visual */
+    .stats-container {
+      display: flex;
+      justify-content: space-around;
+      width: 100%;
+      text-align: center;
+      gap: 1vw;
+    }
+
+    .stat-number {
+      font-family: var(--font-header);
+      font-size: 5.5vw;
+      font-weight: 900;
+      color: var(--accent-color);
+      letter-spacing: -0.03em;
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-family: var(--font-header);
+      font-size: 1.1vw;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-top: 0.6vw;
+    }
+
+    .stat-sublabel {
+      font-size: 0.8vw;
+      color: var(--text-muted);
+      margin-top: 0.3vw;
+      line-height: 1.4;
+    }
+
+    /* Floating navigation control bar at bottom */
+    .controls-bar {
+      position: fixed;
+      bottom: 2vw;
+      display: flex;
+      align-items: center;
+      gap: 1.5vw;
+      background: rgba(12, 28, 24, 0.9);
+      border: 1px solid var(--border-color);
+      padding: 0.6vw 1.5vw;
+      border-radius: 50px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      z-index: 100;
+    }
+
+    .control-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 2vw;
+      height: 2vw;
+      border-radius: 50%;
+      transition: all 0.3s ease;
+    }
+
+    .control-btn:hover {
+      background-color: var(--accent-glow);
+      color: var(--accent-color);
+    }
+
+    .slide-counter {
+      font-family: var(--font-header);
+      font-size: 0.9vw;
+      font-weight: 700;
+      color: var(--text-main);
+      min-width: 5vw;
+      text-align: center;
+    }
+
+    /* Print styles */
+    @media print {
+      body {
+        background-color: #ffffff;
+        color: #000000;
+        overflow: visible;
+        height: auto;
+      }
+
+      .presentation-container {
+        display: block;
+        max-width: 100%;
+        max-height: none;
+        padding: 0;
+        aspect-ratio: auto;
+      }
+
+      .slides-wrapper {
+        box-shadow: none;
+        border: none;
+        border-radius: 0;
+        overflow: visible;
+        background: none;
+      }
+
+      .slide {
+        position: relative;
+        opacity: 1 !important;
+        visibility: visible !important;
+        display: flex !important;
+        height: 100vh;
+        page-break-after: always;
+        border-bottom: 1px solid #ddd;
+        background: #ffffff !important;
+        color: #000000 !important;
+      }
+
+      :root {
+        --text-main: #0a0a0a;
+        --text-muted: #4b5563;
+        --bg-color: #ffffff;
+        --card-bg: #f9fafb;
+        --border-color: #e5e7eb;
+      }
+
+      .controls-bar {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="presentation-container">
+    <div class="slides-wrapper">
+
+      <!-- SLIDE 1: TITLE SLIDE -->
+      <div class="slide slide-title-layout active">
+        <div class="slide-logo">
+          <i data-lucide="leaf"></i> SHIVA <span>REFRESH</span>
+        </div>
+        <h1 class="main-title">E-Commerce Ecosystem & <br><span>Project Closure</span></h1>
+        <p class="main-subtitle">Milestone Review & Production Build finalization. Delivering a wellness-centric direct ordering workspace.</p>
+        
+        <div class="presenter-tag">
+          <div class="presenter-item"><i data-lucide="users"></i> Presenters:</div>
+          <div>D. Gowtham</div>
+          <div style="width: 1px; height: 1vw; background-color: var(--border-color)"></div>
+          <div>P. Charan Thej</div>
+        </div>
+        
+        <p class="title-footer">Full-Stack Internship Program | June 2026</p>
+      </div>
+
+      <!-- SLIDE 2: JOURNEY RECAP -->
+      <div class="slide">
+        <div class="slide-header">
+          <div class="slide-title-area">
+            <h2>Journey Recap</h2>
+            <h3>Week 1 to Week 4 Progress</h3>
+          </div>
+          <div class="slide-logo">🌿 Shiva <span>Refresh</span></div>
+        </div>
+        <div class="slide-body">
+          <div class="grid-3col">
+            <div class="info-card" style="border-left: 3px solid #f87171;">
+              <div class="info-card-icon" style="background-color: rgba(248,113,113,0.15); border-color: rgba(248,113,113,0.3); color: #f87171;">
+                <i data-lucide="alert-triangle"></i>
+              </div>
+              <div class="info-card-title">Phase 1: Week 1</div>
+              <div class="info-card-desc">
+                Identified manual ordering bottlenecks. Discovered high customer drop-off due to slow menu browsing over unstructured chat. Defined digital catalog objectives.
+              </div>
+            </div>
+            
+            <div class="info-card" style="border-left: 3px solid #60a5fa;">
+              <div class="info-card-icon" style="background-color: rgba(96,165,250,0.15); border-color: rgba(96,165,250,0.3); color: #60a5fa;">
+                <i data-lucide="code"></i>
+              </div>
+              <div class="info-card-title">Phase 2: Weeks 2-3</div>
+              <div class="info-card-desc">
+                Designed & built core UI in React and Tailwind CSS. Implemented product category filtering, real-time search, client-side cart management, and local storage state persistence.
+              </div>
+            </div>
+
+            <div class="info-card" style="border-left: 3px solid var(--accent-color);">
+              <div class="info-card-icon">
+                <i data-lucide="check-circle-2"></i>
+              </div>
+              <div class="info-card-title">Phase 3: Week 4</div>
+              <div class="info-card-desc">
+                Built the Chef Dashboard with passcode entry & device security visibility toggles. Finalized production bundler compliance and conducted comprehensive flow validation.
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <div class="slide-footer-left"><span>Goal: Project Review</span><span>Slide 2 of 16</span></div>
+          <div>D. Gowtham & P. Charan Thej</div>
+        </div>
+      </div>
+
+      <!-- SLIDE 3: FINAL SYSTEM OVERVIEW -->
+      <div class="slide">
+        <div class="slide-header">
+          <div class="slide-title-area">
+            <h2>Final System Overview</h2>
+            <h3>Delivered Scope vs Planned Core Specs</h3>
+          </div>
+          <div class="slide-logo">🌿 Shiva <span>Refresh</span></div>
+        </div>
+        <div class="slide-body" style="align-items: flex-start; justify-content: flex-start;">
+          <table class="slide-table">
+            <thead>
+              <tr>
+                <th style="width: 25%">Feature Spec</th>
+                <th style="width: 45%">Implementation Strategy</th>
+                <th style="width: 15%">Status</th>
+                <th style="width: 15%">Impact</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Wellness Menu Catalog</strong></td>
+                <td>Filtering by health category (PCOD/Weight Loss) + popup details.</td>
+                <td style="color: var(--accent-color); font-weight: bold;">✓ 100% Complete</td>
+                <td>Enhanced product discovery.</td>
+              </tr>
+              <tr>
+                <td><strong>Interactive Shopping Basket</strong></td>
+                <td>Reactive cart drawer with LocalStorage caching to save current progress.</td>
+                <td style="color: var(--accent-color); font-weight: bold;">✓ 100% Complete</td>
+                <td>Zero data loss on page reload.</td>
+              </tr>
+              <tr>
+                <td><strong>WhatsApp API Bridge</strong></td>
+                <td>Compiles basket items into URI-safe text formatting and redirects on dispatch.</td>
+                <td style="color: var(--accent-color); font-weight: bold;">✓ 100% Complete</td>
+                <td>Frictionless, serverless ordering.</td>
+              </tr>
+              <tr>
+                <td><strong>Administrative Ingress</strong></td>
+                <td>Chef portal overview, menu updates, order histories, status switches.</td>
+                <td style="color: var(--accent-color); font-weight: bold;">✓ 100% Complete</td>
+                <td>Self-managing storefront.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="slide-footer">
+          <div class="slide-footer-left"><span>Goal: System Specifications</span><span>Slide 3 of 16</span></div>
+          <div>D. Gowtham & P. Charan Thej</div>
+        </div>
+      </div>
+
+      <!-- SLIDE 4: CUSTOMER INTERFACE -->
+      <div class="slide">
+        <div class="slide-header">
+          <div class="slide-title-area">
+            <h2>Customer Interface</h2>
+            <h3>Intuitive Wellness Landing Layout</h3>
+          </div>
+          <div class="slide-logo">🌿 Shiva <span>Refresh</span></div>
+        </div>
+        <div class="slide-body">
+          <div class="split-left">
+            <div class="bullet-list">
+              <div class="bullet-item">
+                <i data-lucide="sparkles"></i>
+                <div>
+                  <span class="bullet-bold">Premium Branding and Aesthetics:</span>
+                  Dark theme color system to invoke organic, luxurious wellness feel. UsesOutfit and Manrope typography for premium polish.
+                </div>
+              </div>
+              <div class="bullet-item">
+                <i data-lucide="layers"></i>
+                <div>
+                  <span class="bullet-bold">Component Hierarchy:</span>
+                  Clean Hero banner, interactive category selector widgets, responsive food card grid, chef story timeline, and a quick-action footer.
+                </div>
+              </div>
+              <div class="bullet-item">
+                <i data-lucide="smartphone"></i>
+                <div>
+                  <span class="bullet-bold">Fully Responsive Design:</span>
+                  Built mobile-first to accommodate target customers order-on-the-go. Navigation drawer handles mobile menu selections smoothly.
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="split-right">
+            <div class="preview-box">
+              <div style="display:flex; flex-direction:column; align-items:center; gap: 0.5vw; width: 80%; background: #0c1c18; padding: 1.5vw; border-radius: 12px; border: 1px solid var(--border-color)">
+                <div style="background-color: var(--accent-color); width: 3vw; height: 3vw; border-radius: 50%; display:flex; align-items:center; justify-content:center; color:#06110e"><i data-lucide="leaf" style="width:1.5vw; height:1.5vw;"></i></div>
+                <div style="font-family: var(--font-header); font-size: 1.3vw; font-weight:bold; color: white">Shiva Refresh</div>
+                <div style="font-size:0.75vw; color:var(--text-muted); text-align:center">Tirupati's Premium Smoothie & Healthy Bowl Kitchen</div>
+                <div style="width: 100%; height: 2px; background: var(--border-color); margin: 0.5vw 0"></div>
+                <div style="background: rgba(113,229,19,0.1); border: 1px solid rgba(113,229,19,0.3); padding: 0.4vw 1vw; border-radius: 4px; font-size:0.6vw; color: var(--accent-color)">Open for Delivery</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <div class="slide-footer-left"><span>Goal: Customer Front-End</span><span>Slide 4 of 16</span></div>
+          <div>D. Gowtham & P. Charan Thej</div>
+        </div>
+      </div>
+
+      <!-- SLIDE 5: SEARCH & CATEGORY FILTERS -->
+      <div class="slide">
+        <div class="slide-header">
+          <div class="slide-title-area">
+            <h2>Search & Category Filters</h2>
+            <h3>Navigating the Health-Conscious Menu</h3>
+          </div>
+          <div class="slide-logo">🌿 Shiva <span>Refresh</span></div>
+        </div>
+        <div class="slide-body">
+          <div class="split-left">
+            <div class="bullet-list">
+              <div class="bullet-item">
+                <i data-lucide="search"></i>
+                <div>
+                  <span class="bullet-bold">Real-time Fuzzy Search:</span>
+                  Instantly searches title, descriptions, or specific ingredients. Helps users filter out foods containing allergens.
+                </div>
+              </div>
+              <div class="bullet-item">
+                <i data-lucide="sliders-horizontal"></i>
+                <div>
+                  <span class="bullet-bold">Diet-Specific Categories:</span>
+                  Quick access tabs for Health Zone, Women Health (hormonal & PCOS focus), Berry Smoothies, Dryfruit Smoothies, and Delights.
+                </div>
+              </div>
+              <div class="bullet-item">
+                <i data-lucide="eye"></i>
+                <div>
+                  <span class="bullet-bold">Nutritional Quick-View Drawer:</span>
+                  Tapping a product details button reveals ingredients, exact serving size (ml/g), and calorie counts.
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="split-right">
+            <div class="preview-box" style="flex-direction: column; justify-content: flex-start; padding: 1.5vw; gap: 0.8vw;">
+              <div style="display:flex; gap: 0.5vw; width: 100%; border: 1px solid var(--border-color); border-radius: 8px; padding: 0.5vw; background: #050a09">
+                <i data-lucide="search" style="width: 1vw; color: var(--text-muted)"></i>
+                <div style="font-size: 0.75vw; color: var(--text-main); opacity: 0.8">Weight Gain...</div>
+              </div>
+              <div style="display: flex; gap: 0.4vw; width: 100%; overflow: hidden">
+                <div style="background: var(--accent-color); color: #06110e; padding: 0.3vw 0.8vw; border-radius: 100px; font-size: 0.65vw; font-weight: bold;">All</div>
+                <div style="background: var(--card-bg); border: 1px solid var(--border-color); padding: 0.3vw 0.8vw; border-radius: 100px; font-size: 0.65vw; white-space: nowrap">Health Zone</div>
+                <div style="background: var(--card-bg); border: 1px solid var(--border-color); padding: 0.3vw 0.8vw; border-radius: 100px; font-size: 0.65vw; white-space: nowrap">Women Health</div>
+              </div>
+              <div style="display:flex; width: 100%; background: #0c1c18; border: 1px solid var(--border-color); border-radius: 8px; padding: 0.6vw; gap:0.6vw; align-items: center">
+                <div style="background:#06110e; width: 3.5vw; height: 3.5vw; border-radius: 6px; display:flex; align-items:center; justify-content:center"><i data-lucide="cookie" style="color:var(--accent-color)"></i></div>
+                <div style="flex-grow:1">
+                  <div style="font-size:0.75vw; font-weight:bold; color: white">Oat Meal (Weight Gain)</div>
+                  <div style="font-size:0.65vw; color: var(--accent-color)">480 kcal | 400g</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <div class="slide-footer-left"><span>Goal: Customer Search & Filters</span><span>Slide 5 of 16</span></div>
+          <div>D. Gowtham & P. Charan Thej</div>
+        </div>
+      </div>
+
+      <!-- SLIDE 6: CART & STATE PERSISTENCE -->
+      <div class="slide">
+        <div class="slide-header">
+          <div class="slide-title-area">
+            <h2>Cart & State Persistence</h2>
+            <h3>Eliminating Checkout Iteration Loss</h3>
+          </div>
+          <div class="slide-logo">🌿 Shiva <span>Refresh</span></div>
+        </div>
+        <div class="slide-body">
+          <div class="split-left">
+            <div class="bullet-list">
+              <div class="bullet-item">
+                <i data-lucide="shopping-bag"></i>
+                <div>
+                  <span class="bullet-bold">Slide-out Cart Drawer:</span>
+                  Maintains visual flow. Shoppers can add multiple smoothies or health bowls while continuing to scroll and explore the menu.
+                </div>
+              </div>
+              <div class="bullet-item">
+                <i data-lucide="refresh-cw"></i>
+                <div>
+                  <span class="bullet-bold">No-Lose Caching:</span>
+                  Uses custom React lifecycle tracking linked to browser `LocalStorage`. The basket state is maintained even if browser tab crashes, reloads, or customer steps away.
+                </div>
+              </div>
+              <div class="bullet-item">
+                <i data-lucide="calculator"></i>
+                <div>
+                  <span class="bullet-bold">Automatic Calculation:</span>
+                  Instantly calculates item values, sets free delivery eligibility limits, and displays exact cart totals dynamically.
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="split-right">
+            <div class="preview-box" style="padding: 1.5vw;">
+              <div style="display:flex; flex-direction:column; background: #0c1c18; border: 1px solid var(--border-color); border-radius: 12px; width: 100%; height: 100%; padding: 0.8vw; justify-content: space-between">
+                <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-color); padding-bottom:0.4vw; font-weight:bold; font-size:0.75vw">
+                  <span>Your Order</span>
+                  <span style="color: var(--accent-color)">2 items</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:0.7vw; margin-top: 0.5vw">
+                  <span>Oat Meal (Weight Gain) x1</span>
+                  <span>₹189</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:0.7vw">
+                  <span>Dry Fruits Bowl x1</span>
+                  <span>₹149</span>
+                </div>
+                <div style="width:100%; height:1px; background:var(--border-color); margin: 0.5vw 0"></div>
+                <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:0.8vw">
+                  <span>Total Amount</span>
+                  <span>₹338</span>
+                </div>
+                <div style="background:var(--accent-color); color:#06110e; font-weight:bold; text-align:center; padding:0.4vw; border-radius:6px; font-size:0.65vw; cursor:pointer; margin-top: 0.6vw">SEND ORDER ON WHATSAPP</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <div class="slide-footer-left"><span>Goal: Customer Cart</span><span>Slide 6 of 16</span></div>
+          <div>D. Gowtham & P. Charan Thej</div>
+        </div>
+      </div>
+
+      <!-- SLIDE 7: WHATSAPP INTEGRATION -->
+      <div class="slide">
+        <div class="slide-header">
+          <div class="slide-title-area">
+            <h2>WhatsApp Integration</h2>
+            <h3>The Direct Merchant Checkout Engine</h3>
+          </div>
+          <div class="slide-logo">🌿 Shiva <span>Refresh</span></div>
+        </div>
+        <div class="slide-body">
+          <div class="split-left">
+            <div class="bullet-list">
+              <div class="bullet-item">
+                <i data-lucide="link"></i>
+                <div>
+                  <span class="bullet-bold">Zero-Middleman Setup:</span>
+                  Eliminates the cost of database servers and transaction processing by routing orders straight to the chef's WhatsApp number.
+                </div>
+              </div>
+              <div class="bullet-item">
+                <i data-lucide="message-square"></i>
+                <div>
+                  <span class="bullet-bold">Prefilled WhatsApp Message Structure:</span>
+                  Automatically formats cart items, quantities, price calculations, and delivery details into a cleanly styled WhatsApp chat script.
+                </div>
+              </div>
+              <div class="bullet-item">
+                <i data-lucide="zap"></i>
+                <div>
+                  <span class="bullet-bold">One-Tap Order Confirmation:</span>
+                  Clicking the dispatch button opens WhatsApp Web or the WhatsApp mobile app preloaded with the order content ready to send.
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="split-right">
+            <div class="preview-box">
+              <div class="phone-mockup">
+                <div class="phone-notch"></div>
+                <div class="phone-content">
+                  <div style="display:flex; align-items:center; gap: 0.3vw; color: white; border-bottom: 1px solid #1f2937; padding-bottom: 0.3vw">
+                    <div style="width:1.2vw; height:1.2vw; border-radius:50%; background:#25d366; display:flex; align-items:center; justify-content:center"><i data-lucide="user" style="width:0.7vw; height:0.7vw; color:white"></i></div>
+                    <span style="font-weight:bold; font-size:0.6vw">Shiva Refresh</span>
+                  </div>
+                  <div class="chat-bubble out">
+                    <strong>*Hello Chef Suresh!*</strong><br>
+                    I would like to order:<br>
+                    • 1x Oat Meal (Weight Gain) (₹189)<br>
+                    • 1x Berry Mix Smoothie (₹149)<br>
+                    ---<br>
+                    <strong>*Total: ₹338*</strong><br>
+                    Name: Gowtham<br>
+                    Deliver to: Room 402, Tirupati Hostel
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <div class="slide-footer-left"><span>Goal: Checkout Mechanism</span><span>Slide 7 of 16</span></div>
+          <div>D. Gowtham & P. Charan Thej</div>
+        </div>
+      </div>
+
+      <!-- SLIDE 8: CHEF PORTAL -->
+      <div class="slide">
+        <div class="slide-header">
+          <div class="slide-title-area">
+            <h2>Chef Portal</h2>
+            <h3>The Store Administration System</h3>
+          </div>
+          <div class="slide-logo">🌿 Shiva <span>Refresh</span></div>
+        </div>
+        <div class="slide-body">
+          <div class="split-left">
+            <div class="bullet-list">
+              <div class="bullet-item">
+                <i data-lucide="key-round"></i>
+                <div>
+                  <span class="bullet-bold">Secure Verification Guard:</span>
+                  Hides administrative entrance behind a 5-click logo gesture or secret URL query. Requires entering the administrative passcode: <code style="color:var(--accent-color); font-weight:bold;">6301</code>.
+                </div>
+              </div>
+              <div class="bullet-item">
+                <i data-lucide="toggle-left"></i>
+                <div>
+                  <span class="bullet-bold">Real-time Catalog Controls:</span>
+                  Allows toggling item availability (In Stock / Out of Stock) instantly, making ingredients adjustments easy.
+                </div>
+              </div>
+              <div class="bullet-item">
+                <i data-lucide="clock"></i>
+                <div>
+                  <span class="bullet-bold">Store Configurations:</span>
+                  Toggles active store status between "Open" and "Closed" to pause incoming orders during rush hours.
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="split-right">
+            <div class="preview-box" style="padding: 1vw;">
+              <div class="dash-mock">
+                <div class="dash-mock-top">
+                  <span style="font-size:0.7vw; font-weight:bold">Chef Dashboard</span>
+                  <span style="color:#10b981; font-size:0.6vw">● Store Open</span>
+                </div>
+                <div class="dash-mock-grid">
+                  <div class="dash-mock-card">
+                    <div style="font-size: 0.5vw; color:var(--text-muted)">Orders</div>
+                    <div style="font-size: 0.9vw; font-weight:bold; color:var(--accent-color)">12 Active</div>
+                  </div>
+                  <div class="dash-mock-card">
+                    <div style="font-size: 0.5vw; color:var(--text-muted)">Revenue</div>
+                    <div style="font-size: 0.9vw; font-weight:bold; color:var(--accent-color)">₹3,540</div>
+                  </div>
+                  <div class="dash-mock-card">
+                    <div style="font-size: 0.5vw; color:var(--text-muted)">Products</div>
+                    <div style="font-size: 0.9vw; font-weight:bold; color:var(--accent-color)">42 Live</div>
+                  </div>
+                  <div class="dash-mock-card">
+                    <div style="font-size: 0.5vw; color:var(--text-muted)">Status</div>
+                    <div style="font-size: 0.8vw; font-weight:bold; color:#f59e0b">Delivery</div>
+                  </div>
+                </div>
+                <div style="border-top:1px solid var(--border-color); padding-top: 0.4vw; font-size: 0.6vw; color: var(--text-muted)">
+                  <strong>Recent Order:</strong> SR-7430 from Gowtham (₹338) - pending dispatch
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <div class="slide-footer-left"><span>Goal: Administration Portal</span><span>Slide 8 of 16</span></div>
+          <div>D. Gowtham & P. Charan Thej</div>
+        </div>
+      </div>
+
+      <!-- SLIDE 9: SYSTEM ARCHITECTURE -->
+      <div class="slide">
+        <div class="slide-header">
+          <div class="slide-title-area">
+            <h2>System Architecture</h2>
+            <h3>Client-Centric Serverless Model</h3>
+          </div>
+          <div class="slide-logo">🌿 Shiva <span>Refresh</span></div>
+        </div>
+        <div class="slide-body">
+          <div class="split-left">
+            <div class="bullet-list">
+              <div class="bullet-item">
+                <i data-lucide="network"></i>
+                <div>
+                  <span class="bullet-bold">Zero Backend Infrastructure:</span>
+                  Leverages the customer's browser engine to handle all logic. Reduces maintenance overhead to 0%.
+                </div>
+              </div>
+              <div class="bullet-item">
+                <i data-lucide="cpu"></i>
+                <div>
+                  <span class="bullet-bold">Client State Synchronization:</span>
+                  Hooks manage the in-memory variables. Synchronized with LocalStorage to secure data lifecycle.
+                </div>
+              </div>
+              <div class="bullet-item">
+                <i data-lucide="git-branch"></i>
+                <div>
+                  <span class="bullet-bold">WhatsApp Bridge Interface:</span>
+                  Converts the local React order objects into standard query parameter payloads for the external WhatsApp API.
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="split-right" style="justify-content: flex-start; padding-left: 2vw;">
+            <div class="flow-chart">
+              <div class="flow-node">
+                <div class="flow-node-icon"><i data-lucide="chrome"></i></div>
+                <div class="flow-node-text">
+                  <h4>Vite + React SPA (Frontend UI)</h4>
+                  <p>Category browsing, search queries, cart drawer updates</p>
+                </div>
+              </div>
+              <div class="flow-arrow"><i data-lucide="arrow-down"></i></div>
+              <div class="flow-node">
+                <div class="flow-node-icon"><i data-lucide="database"></i></div>
+                <div class="flow-node-text">
+                  <h4>Browser LocalStorage System</h4>
+                  <p>Saves custom products, cart items, configuration states</p>
+                </div>
+              </div>
+              <div class="flow-arrow"><i data-lucide="arrow-down"></i></div>
+              <div class="flow-node">
+                <div class="flow-node-icon"><i data-lucide="share-2"></i></div>
+                <div class="flow-node-text">
+                  <h4>WhatsApp API Dispatcher</h4>
+                  <p>URI formatted payloads bypass database pipelines directly to Chef's terminal</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <div class="slide-footer-left"><span>Goal: Operational Topology</span><span>Slide 9 of 16</span></div>
+          <div>D. Gowtham & P. Charan Thej</div>
+        </div>
+      </div>
+
+      <!-- SLIDE 10: CODE HIGHLIGHTS -->
+      <div class="slide">
+        <div class="slide-header">
+          <div class="slide-title-area">
+            <h2>Code Highlights</h2>
+            <h3>Security Ingress state logic in App.tsx</h3>
+          </div>
+          <div class="slide-logo">🌿 Shiva <span>Refresh</span></div>
+        </div>
+        <div class="slide-body">
+          <div class="code-container">
+            <pre>
+<span style="color:#ff79c6">// Hidden Chef Portal visibility state handler in App.tsx</span>
+<span style="color:#8be9fd; font-weight:bold">const</span> [showChefButton, setShowChefButton] = useState(() => {
+  <span style="color:#ff79c6">try</span> {
+    <span style="color:#ff79c6">if</span> (<span style="color:#ff79c6">typeof</span> window !== <span style="color:#f1fa8c">"undefined"</span>) {
+      <span style="color:#8be9fd; font-weight:bold">const</span> params = <span style="color:#ff79c6">new</span> URLSearchParams(window.location.search);
+      
+      <span style="color:#ff79c6">if</span> (params.has(<span style="color:#f1fa8c">"chef"</span>) || params.has(<span style="color:#f1fa8c">"admin"</span>) || params.has(<span style="color:#f1fa8c">"owner"</span>)) {
+        <span style="color:#6272a4">// Returns true dynamically to show the admin lock button temporarily</span>
+        <span style="color:#ff79c6">return</span> <span style="color:#bd93f9">true</span>;
+      }
+      
+      <span style="color:#6272a4">// Fallback to checking local storage if logo gesture was clicked 5 times</span>
+      <span style="color:#ff79c6">return</span> localStorage.getItem(<span style="color:#f1fa8c">"shiva_refresh_show_chef_button"</span>) === <span style="color:#f1fa8c">"true"</span>;
+    }
+  } <span style="color:#ff79c6">catch</span> (e) {
+    console.error(e);
+  }
+  <span style="color:#ff79c6">return</span> <span style="color:#bd93f9">false</span>;
+});</pre>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <div class="slide-footer-left"><span>Goal: Code Snippet Walkthrough</span><span>Slide 10 of 16</span></div>
+          <div>D. Gowtham & P. Charan Thej</div>
+        </div>
+      </div>
+
+      <!-- SLIDE 11: DATABASE & STORAGE DESIGN -->
+      <div class="slide">
+        <div class="slide-header">
+          <div class="slide-title-area">
+            <h2>Database & Storage Design</h2>
+            <h3>Serverless LocalStorage Schemas</h3>
+          </div>
+          <div class="slide-logo">🌿 Shiva <span>Refresh</span></div>
+        </div>
+        <div class="slide-body">
+          <div class="schema-grid">
+            <div class="schema-card">
+              <div>
+                <span class="schema-key">shiva_refresh_show_chef_button</span>
+                <span class="schema-type">Boolean</span>
+              </div>
+              <div class="schema-desc">
+                Determines whether the administrative entrance lock icon remains visible on the header. Set via the 5-click logo gesture.
+              </div>
+            </div>
+
+            <div class="schema-card">
+              <div>
+                <span class="schema-key">shiva_refresh_products</span>
+                <span class="schema-type">JSON Array</span>
+              </div>
+              <div class="schema-desc">
+                Holds custom added, edited, or deleted menu products. Hydrates the active state of the store menu catalog.
+              </div>
+            </div>
+
+            <div class="schema-card">
+              <div>
+                <span class="schema-key">shiva_refresh_orders</span>
+                <span class="schema-type">JSON Array</span>
+              </div>
+              <div class="schema-desc">
+                Caches checkout orders locally with unique Order ID streams (e.g. `SR-7430`), customer addresses, times, and contents.
+              </div>
+            </div>
+
+            <div class="schema-card">
+              <div>
+                <span class="schema-key">shiva_refresh_business</span>
+                <span class="schema-type">JSON Object</span>
+              </div>
+              <div class="schema-desc">
+                Saves configuration settings: store open/closed indicator, chef description biography, and custom support dispatch numbers.
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <div class="slide-footer-left"><span>Goal: Storage Model</span><span>Slide 11 of 16</span></div>
+          <div>D. Gowtham & P. Charan Thej</div>
+        </div>
+      </div>
+
+      <!-- SLIDE 12: TECHNICAL CHALLENGES 1 -->
+      <div class="slide">
+        <div class="slide-header">
+          <div class="slide-title-area">
+            <h2>Technical Challenges & Solutions</h2>
+            <h3>Part 1: Order Formatting & Local Caching</h3>
+          </div>
+          <div class="slide-logo">🌿 Shiva <span>Refresh</span></div>
+        </div>
+        <div class="slide-body" style="flex-direction: column; gap: 1.5vw; width: 100%; align-items: stretch; justify-content: center;">
+          
+          <div style="background: rgba(6,17,14,0.6); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5vw; border-left: 4px solid var(--accent-color);">
+            <div style="display:flex; justify-content:space-between; font-weight:bold; font-size: 1.1vw; margin-bottom: 0.5vw">
+              <span>Challenge 1: Formatting Complex WhatsApp Message Payloads</span>
+              <span style="color:var(--accent-color)">Completed</span>
+            </div>
+            <div style="font-size:0.9vw; color:var(--text-muted); line-height: 1.5;">
+              <strong>Problem:</strong> Customers ordering nested items (like customized bowls and sugar-free smoothies) require structured lists with prices, subtotals, and delivery coordinates that fit WhatsApp URI constraints.<br>
+              <strong>Solution:</strong> Wrote a string template generator using `encodeURIComponent` with line-break character mapping (`\n`) and bold markdown formatting (`*`) to structure message summaries clearly on mobile displays.
+            </div>
+          </div>
+
+          <div style="background: rgba(6,17,14,0.6); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5vw; border-left: 4px solid var(--accent-color)">
+            <div style="display:flex; justify-content:space-between; font-weight:bold; font-size: 1.1vw; margin-bottom: 0.5vw">
+              <span>Challenge 2: Serverless State Caching</span>
+              <span style="color:var(--accent-color)">Completed</span>
+            </div>
+            <div style="font-size:0.9vw; color:var(--text-muted); line-height: 1.5;">
+              <strong>Problem:</strong> Standard React states reset on page refresh. Setting up external database hosting would add monthly costs for the business owner.<br>
+              <strong>Solution:</strong> Built a data pipeline binding React hook lifecycle states directly to browser `LocalStorage`. Ensures the basket, menu updates, and orders remain synchronized locally for free.
+            </div>
+          </div>
+
+        </div>
+        <div class="slide-footer">
+          <div class="slide-footer-left"><span>Goal: Architectural Obstacles</span><span>Slide 12 of 16</span></div>
+          <div>D. Gowtham & P. Charan Thej</div>
+        </div>
+      </div>
+
+      <!-- SLIDE 13: TECHNICAL CHALLENGES 2 -->
+      <div class="slide">
+        <div class="slide-header">
+          <div class="slide-title-area">
+            <h2>Technical Challenges & Solutions</h2>
+            <h3>Part 2: Ingress Protection & URL Param Caching</h3>
+          </div>
+          <div class="slide-logo">🌿 Shiva <span>Refresh</span></div>
+        </div>
+        <div class="slide-body" style="flex-direction: column; gap: 1.5vw; width: 100%; align-items: stretch; justify-content: center;">
+          
+          <div style="background: rgba(6,17,14,0.6); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5vw; border-left: 4px solid var(--accent-color);">
+            <div style="display:flex; justify-content:space-between; font-weight:bold; font-size: 1.1vw; margin-bottom: 0.5vw">
+              <span>Challenge 3: Shared Device Admin Visibility Exposure</span>
+              <span style="color:var(--accent-color)">Completed</span>
+            </div>
+            <div style="font-size:0.9vw; color:var(--text-muted); line-height: 1.5;">
+              <strong>Problem:</strong> If a chef logs in from a shared computer at the store, the Chef Portal entry button remains visible to other customers on that browser.<br>
+              <strong>Solution:</strong> Designed a **Device Security** button inside settings that wipes the persistent `shiva_refresh_show_chef_button` key from local storage and redirects the page, securing administrative entry instantly.
+            </div>
+          </div>
+
+          <div style="background: rgba(6,17,14,0.6); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5vw; border-left: 4px solid var(--accent-color)">
+            <div style="display:flex; justify-content:space-between; font-weight:bold; font-size: 1.1vw; margin-bottom: 0.5vw">
+              <span>Challenge 4: Caching of Temporary URL Query Flags</span>
+              <span style="color:var(--accent-color)">Completed</span>
+            </div>
+            <div style="font-size:0.9vw; color:var(--text-muted); line-height: 1.5;">
+              <strong>Problem:</strong> Accessing the app with `?admin` saved the permission permanently to local storage, keeping the portal visible even after removing `?admin` from the URL.<br>
+              <strong>Solution:</strong> Refactored the state initializer in `App.tsx` to read the search params dynamically during load. It displays the button temporarily without writing it to localStorage, so removing the parameter and reloading hides it.
+            </div>
+          </div>
+
+        </div>
+        <div class="slide-footer">
+          <div class="slide-footer-left"><span>Goal: Security & Query Parameters</span><span>Slide 13 of 16</span></div>
+          <div>D. Gowtham & P. Charan Thej</div>
+        </div>
+      </div>
+
+      <!-- SLIDE 14: TESTING & VERIFICATION -->
+      <div class="slide">
+        <div class="slide-header">
+          <div class="slide-title-area">
+            <h2>Testing & Verification</h2>
+            <h3>Ensuring Application Stability & Code Quality</h3>
+          </div>
+          <div class="slide-logo">🌿 Shiva <span>Refresh</span></div>
+        </div>
+        <div class="slide-body">
+          <div class="split-left">
+            <div class="bullet-list">
+              <div class="bullet-item">
+                <i data-lucide="package-check"></i>
+                <div>
+                  <span class="bullet-bold">Production Build Validation:</span>
+                  Executed `npm run build` checks. Verified that code compiles cleanly without TypeScript, React 19, or CSS layout errors.
+                </div>
+              </div>
+              <div class="bullet-item">
+                <i data-lucide="heart-handshake"></i>
+                <div>
+                  <span class="bullet-bold">Interactive Cart Tests:</span>
+                  Verified add-to-order hooks, item count increments/decrements, clear cart commands, and local storage state persistence.
+                </div>
+              </div>
+              <div class="bullet-item">
+                <i data-lucide="shield-alert"></i>
+                <div>
+                  <span class="bullet-bold">Ingress Passcode Access Test:</span>
+                  Tested login validations. Confirmed that entering the master passcode `6301` opens dashboard tabs, while invalid passcode entry triggers error indicators.
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="split-right">
+            <div class="preview-box" style="padding: 1.2vw; flex-direction: column; gap:0.5vw; justify-content: flex-start; align-items: flex-start;">
+              <h4 style="font-size:0.85vw; font-weight:bold; color:var(--accent-color); margin-bottom: 0.3vw">Terminal Test Results:</h4>
+              <div style="font-family: var(--font-mono); font-size: 0.65vw; color: #a3b899; line-height: 1.4; background:#040807; width:100%; padding:0.8vw; border-radius:6px; border:1px solid var(--border-color)">
+                $ tsc --noEmit (Success)<br>
+                $ vite build<br>
+                ✓ 1732 modules transformed.<br>
+                rendering chunks...<br>
+                dist/index.html &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1.56 kB<br>
+                dist/assets/index.css &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;75.43 kB<br>
+                dist/assets/index.js &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;340.27 kB<br>
+                <span style="color:var(--accent-color)">✓ built in 4.15s - Success</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <div class="slide-footer-left"><span>Goal: Code Validation & QA</span><span>Slide 14 of 16</span></div>
+          <div>D. Gowtham & P. Charan Thej</div>
+        </div>
+      </div>
+
+      <!-- SLIDE 15: LEARNINGS, LIMITATIONS & FUTURE SCOPE -->
+      <div class="slide">
+        <div class="slide-header">
+          <div class="slide-title-area">
+            <h2>Learnings, Limitations & Future Scope</h2>
+            <h3>Project Wrap-up and Evolution Roadmap</h3>
+          </div>
+          <div class="slide-logo">🌿 Shiva <span>Refresh</span></div>
+        </div>
+        <div class="slide-body">
+          <div class="grid-3col">
+            <div class="info-card">
+              <div class="info-card-icon"><i data-lucide="graduation-cap"></i></div>
+              <div class="info-card-title">Key Learnings</div>
+              <div class="info-card-desc">
+                * React 19 State Synchronization<br>
+                * Client-side persistence strategies<br>
+                * Building responsive styling frameworks in Tailwind CSS<br>
+                * Creating dynamic ingress triggers without backends
+              </div>
+            </div>
+
+            <div class="info-card">
+              <div class="info-card-icon"><i data-lucide="slash"></i></div>
+              <div class="info-card-title">Limitations</div>
+              <div class="info-card-desc">
+                * Caching is restricted to the browser: menu edits or order logs on one device are not visible on other devices.<br>
+                * Offline modes require a browser cookie/local storage reset to clear space.
+              </div>
+            </div>
+
+            <div class="info-card">
+              <div class="info-card-icon"><i data-lucide="trending-up"></i></div>
+              <div class="info-card-title">Future Scope</div>
+              <div class="info-card-desc">
+                * Integration of external database (Supabase or Firebase) for multi-device sync.<br>
+                * SMS order dispatching integration.<br>
+                * Integration of local payment gateway checkout mechanisms.
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="slide-footer">
+          <div class="slide-footer-left"><span>Goal: Post-Implementation Scope</span><span>Slide 15 of 16</span></div>
+          <div>D. Gowtham & P. Charan Thej</div>
+        </div>
+      </div>
+
+      <!-- SLIDE 16: Q&A / CLOSING -->
+      <div class="slide slide-title-layout">
+        <div class="slide-logo" style="margin-bottom: 1vw">
+          <i data-lucide="leaf"></i> SHIVA <span>REFRESH</span>
+        </div>
+        <h1 class="main-title" style="font-size: 5vw;">Questions & Answers</h1>
+        <p class="main-subtitle" style="font-size: 1.3vw; max-width: 40vw; margin: 1vw auto;">Thank you for your time. The Shiva Refresh web ordering catalog is compiled, tested, and ready for launch.</p>
+        
+        <div style="margin-top: 1.5vw; font-family: var(--font-header); font-size: 1.1vw; font-weight: 700; color: var(--accent-color);">
+          D. Gowtham & P. Charan Thej
+        </div>
+        <p style="font-size: 0.8vw; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.15em; margin-top: 0.5vw">Full-Stack Development Interns</p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FLOATING NAVIGATION BAR -->
+  <div class="controls-bar">
+    <button class="control-btn" id="prev-btn" title="Previous Slide (Left Arrow / Backspace)"><i data-lucide="chevron-left"></i></button>
+    <div class="slide-counter" id="counter-display">Slide 1 / 16</div>
+    <button class="control-btn" id="next-btn" title="Next Slide (Right Arrow / Spacebar)"><i data-lucide="chevron-right"></i></button>
+    <button class="control-btn" id="print-btn" title="Print Slides to PDF (Ctrl+P)"><i data-lucide="printer"></i></button>
+  </div>
+
+  <script>
+    // Initialize Lucide icons
+    lucide.createIcons();
+
+    // Slides elements
+    const slides = document.querySelectorAll('.slide');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const printBtn = document.getElementById('print-btn');
+    const counterDisplay = document.getElementById('counter-display');
+    
+    let currentSlideIndex = 0;
+
+    function updateSlides() {
+      slides.forEach((slide, index) => {
+        if (index === currentSlideIndex) {
+          slide.classList.add('active');
+        } else {
+          slide.classList.remove('active');
+        }
+      });
+      counterDisplay.textContent = `Slide ${currentSlideIndex + 1} / ${slides.length}`;
+    }
+
+    function nextSlide() {
+      if (currentSlideIndex < slides.length - 1) {
+        currentSlideIndex++;
+        updateSlides();
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlideIndex > 0) {
+        currentSlideIndex--;
+        updateSlides();
+      }
+    }
+
+    // Button event listeners
+    nextBtn.addEventListener('click', nextSlide);
+    prevBtn.addEventListener('click', prevSlide);
+    printBtn.addEventListener('click', () => {
+      window.print();
+    });
+
+    // Keyboard Event Listener
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault();
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'Backspace') {
+        e.preventDefault();
+        prevSlide();
+      }
+    });
+  </script>
+</body>
+</html>
