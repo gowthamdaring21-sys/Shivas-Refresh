@@ -64,7 +64,6 @@ export default function App() {
       if (typeof window !== "undefined") {
         const params = new URLSearchParams(window.location.search);
         if (params.has("chef") || params.has("admin") || params.has("owner")) {
-          localStorage.setItem("shiva_refresh_show_chef_button", "true");
           return true;
         }
         return localStorage.getItem("shiva_refresh_show_chef_button") === "true";
