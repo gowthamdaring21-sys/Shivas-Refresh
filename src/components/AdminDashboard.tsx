@@ -113,6 +113,7 @@ export default function AdminDashboard({
   const [formImage, setFormImage] = useState("");
   const [formCalories, setFormCalories] = useState<number | undefined>(undefined);
   const [formServingSize, setFormServingSize] = useState("250ml");
+  const [formAvailableQuantity, setFormAvailableQuantity] = useState<number | undefined>(undefined);
 
   // Badges checkboxes
   const [isSugarFree, setIsSugarFree] = useState(false);
@@ -194,6 +195,7 @@ export default function AdminDashboard({
     setFormImage(p.image);
     setFormCalories(p.calories);
     setFormServingSize(p.servingSize || "250ml");
+    setFormAvailableQuantity(p.availableQuantity);
 
     setIsSugarFree(p.isSugarFree || false);
     setIsPcodFriendly(p.isPcodFriendly || false);
@@ -215,6 +217,7 @@ export default function AdminDashboard({
     setFormImage(PRESET_IMAGES[0].url);
     setFormCalories(160);
     setFormServingSize("250ml");
+    setFormAvailableQuantity(20);
 
     setIsSugarFree(false);
     setIsPcodFriendly(false);
@@ -241,6 +244,7 @@ export default function AdminDashboard({
       image: formImage,
       calories: formCalories ? Number(formCalories) : undefined,
       servingSize: formServingSize,
+      availableQuantity: formAvailableQuantity !== undefined ? Number(formAvailableQuantity) : undefined,
       isSugarFree,
       isPcodFriendly,
       isHighProtein,
@@ -248,6 +252,17 @@ export default function AdminDashboard({
       isDiabeticFriendly,
       isMostOrdered
     };
+
+    // Adjust soldOutIds based on the compiled availableQuantity
+    let updatedSoldOutIds = [...soldOutIds];
+    if (compiledProduct.availableQuantity === 0) {
+      if (!updatedSoldOutIds.includes(compiledProduct.id)) {
+        updatedSoldOutIds.push(compiledProduct.id);
+      }
+    } else if (compiledProduct.availableQuantity !== undefined && compiledProduct.availableQuantity > 0) {
+      updatedSoldOutIds = updatedSoldOutIds.filter((id) => id !== compiledProduct.id);
+    }
+    saveSoldOutIds(updatedSoldOutIds);
 
     if (isAddMode) {
       onSaveProducts([compiledProduct, ...products]);
@@ -269,11 +284,25 @@ export default function AdminDashboard({
 
   // Toggle availability of product
   const handleToggleStock = (productId: string) => {
-    if (soldOutIds.includes(productId)) {
-      saveSoldOutIds(soldOutIds.filter((id) => id !== productId));
-    } else {
-      saveSoldOutIds([...soldOutIds, productId]);
-    }
+    let updatedSoldOutIds = [...soldOutIds];
+    const updatedProducts = products.map((p) => {
+      if (p.id === productId) {
+        const willBeSoldOut = !soldOutIds.includes(productId);
+        if (willBeSoldOut) {
+          if (!updatedSoldOutIds.includes(productId)) {
+            updatedSoldOutIds.push(productId);
+          }
+          return { ...p, availableQuantity: 0 };
+        } else {
+          updatedSoldOutIds = updatedSoldOutIds.filter((id) => id !== productId);
+          return { ...p, availableQuantity: (p.availableQuantity !== undefined && p.availableQuantity > 0) ? p.availableQuantity : 15 };
+        }
+      }
+      return p;
+    });
+
+    onSaveProducts(updatedProducts);
+    saveSoldOutIds(updatedSoldOutIds);
   };
 
   // Handle Order status updates
@@ -822,17 +851,22 @@ export default function AdminDashboard({
                             </td>
 
                             {/* Stock Toggle operations */}
-                            <td className="py-4 px-4 text-center">
-                              <button
-                                onClick={() => handleToggleStock(p.id)}
-                                className={`text-[10px] font-manrope font-black uppercase px-2.5 py-1.5 rounded-lg border transition-all cursor-pointer ${
-                                  isSoldOut
-                                    ? "bg-red-500/10 border-red-500/35 text-red-400"
-                                    : "bg-emerald-500/10 border-emerald-500/35 text-emerald-400"
-                                }`}
-                              >
-                                {isSoldOut ? "● Sold Out" : "● In Stock"}
-                              </button>
+                            <td className="py-4 px-4 text-center min-w-[120px]">
+                              <div className="flex flex-col items-center gap-1">
+                                <button
+                                  onClick={() => handleToggleStock(p.id)}
+                                  className={`text-[10px] font-manrope font-black uppercase px-2.5 py-1.5 rounded-lg border transition-all cursor-pointer ${
+                                    isSoldOut
+                                      ? "bg-red-500/10 border-red-500/35 text-red-400"
+                                      : "bg-emerald-500/10 border-emerald-500/35 text-emerald-400"
+                                  }`}
+                                >
+                                  {isSoldOut ? "● Sold Out" : "● In Stock"}
+                                </button>
+                                <span className="text-[10px] text-stone-500 font-mono font-extrabold select-none">
+                                  Qty: {p.availableQuantity !== undefined ? p.availableQuantity : "∞"}
+                                </span>
+                              </div>
                             </td>
 
                             {/* Edit & Delete Buttons */}
@@ -1192,8 +1226,8 @@ export default function AdminDashboard({
                   </select>
                 </div>
 
-                {/* Calories */}
-                <div className="grid grid-cols-2 gap-2">
+                {/* Calories, Serving, Stock */}
+                <div className="grid grid-cols-3 gap-2">
                   <div className="flex flex-col gap-1.5">
                     <label className="text-stone-500 font-extrabold uppercase font-mono tracking-wider text-[10px]">Serving Size</label>
                     <input
@@ -1212,6 +1246,17 @@ export default function AdminDashboard({
                       onChange={(e) => setFormCalories(e.target.value ? Number(e.target.value) : undefined)}
                       className="border border-stone-300 focus:border-emerald-500 p-2.5 rounded-lg text-xs leading-none outline-none"
                       placeholder="e.g. 180"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-stone-500 font-extrabold uppercase font-mono tracking-wider text-[10px]">Stock Qty</label>
+                    <input
+                      type="number"
+                      value={formAvailableQuantity !== undefined ? formAvailableQuantity : ""}
+                      onChange={(e) => setFormAvailableQuantity(e.target.value ? Number(e.target.value) : undefined)}
+                      className="border border-stone-300 focus:border-emerald-500 p-2.5 rounded-lg text-xs leading-none outline-none"
+                      placeholder="e.g. 20"
+                      min={0}
                     />
                   </div>
                 </div>

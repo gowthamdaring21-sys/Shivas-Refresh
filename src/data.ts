@@ -645,13 +645,24 @@ export const PRODUCTS: Product[] = ALL_PRODUCTS.map(product => {
     product.name.toLowerCase().includes("shake") ||
     (product.servingSize && product.servingSize.toLowerCase().endsWith("ml"));
 
+  let initialStock = 25;
+  if (product.id === "hz-1") initialStock = 3;
+  if (product.id === "hz-3") initialStock = 12;
+  if (product.id === "wh-1") initialStock = 5;
+  if (product.id === "bs-2") initialStock = 18;
+
+  const baseProduct = {
+    ...product,
+    availableQuantity: initialStock
+  };
+
   if (isSmoothieOrDrink) {
     return {
-      ...product,
+      ...baseProduct,
       servingSize: "250ml"
     };
   }
-  return product;
+  return baseProduct;
 });
 
 export const BUSINESS_INFO = {

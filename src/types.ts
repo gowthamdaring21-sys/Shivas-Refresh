@@ -14,6 +14,7 @@ export interface Product {
   isDiabeticFriendly?: boolean;
   servingSize?: string;
   calories?: number;
+  availableQuantity?: number;
 }
 
 export interface Category {

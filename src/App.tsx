@@ -206,6 +206,55 @@ export default function App() {
     }
   };
 
+  const decrementStock = (orderedItems: { productId: string; quantity: number }[]) => {
+    let updatedProducts = [...productsState];
+    let newSoldOutIds = [...soldOutIds];
+    let changed = false;
+
+    orderedItems.forEach(({ productId, quantity }) => {
+      const idx = updatedProducts.findIndex((p) => p.id === productId);
+      if (idx !== -1) {
+        const p = updatedProducts[idx];
+        if (p.availableQuantity !== undefined) {
+          const newQty = Math.max(0, p.availableQuantity - quantity);
+          updatedProducts[idx] = { ...p, availableQuantity: newQty };
+          changed = true;
+          
+          if (newQty === 0 && !newSoldOutIds.includes(productId)) {
+            newSoldOutIds.push(productId);
+          }
+        }
+      }
+    });
+
+    if (changed) {
+      saveProducts(updatedProducts);
+      setSoldOutIds(newSoldOutIds);
+      try {
+        localStorage.setItem("shiva_refresh_soldout_ids", JSON.stringify(newSoldOutIds));
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  };
+
+  const renderStockLevel = (p: Product) => {
+    const isSoldOut = soldOutIds.includes(p.id);
+    if (isSoldOut) {
+      return <span className="text-red-500 font-mono font-extrabold text-[10px] uppercase block tracking-wider mt-1 select-none">● Out of Stock</span>;
+    }
+    if (p.availableQuantity !== undefined) {
+      if (p.availableQuantity === 0) {
+        return <span className="text-red-500 font-mono font-extrabold text-[10px] uppercase block tracking-wider mt-1 select-none">● Out of Stock</span>;
+      }
+      if (p.availableQuantity <= 5) {
+        return <span className="text-orange-cta font-mono font-extrabold text-[10px] uppercase block tracking-wider mt-1 select-none">⚠️ Only {p.availableQuantity} left!</span>;
+      }
+      return <span className="text-stone-400 font-mono font-extrabold text-[10px] uppercase block tracking-wider mt-1 select-none">{p.availableQuantity} available</span>;
+    }
+    return <span className="text-stone-400 font-mono font-extrabold text-[10px] uppercase block tracking-wider mt-1 select-none">In Stock</span>;
+  };
+
   // Passcode login verification
   const handleVerifyPasscode = (e: React.FormEvent) => {
     e.preventDefault();
@@ -244,8 +293,14 @@ export default function App() {
       event.stopPropagation();
     }
     
+    const latestProduct = productsState.find(p => p.id === product.id) || product;
     // Guard against sold out items
-    if (soldOutIds.includes(product.id)) {
+    if (soldOutIds.includes(product.id) || latestProduct.availableQuantity === 0) {
+      return;
+    }
+    const inCart = cart.find((item) => item.product.id === product.id)?.quantity || 0;
+    if (latestProduct.availableQuantity !== undefined && inCart >= latestProduct.availableQuantity) {
+      alert(`Sorry, only ${latestProduct.availableQuantity} units of "${product.name}" are currently available in stock.`);
       return;
     }
     
@@ -349,6 +404,7 @@ export default function App() {
       location: "Tirupati Region (Direct Order)"
     };
     saveOrders([newOrder, ...orders]);
+    decrementStock([{ productId: product.id, quantity: 1 }]);
 
     // Open WhatsApp
     const message = encodeURIComponent(
@@ -378,6 +434,7 @@ export default function App() {
       location: "Tirupati Region (Cart Order)"
     };
     saveOrders([newOrder, ...orders]);
+    decrementStock(cart.map(item => ({ productId: item.product.id, quantity: item.quantity })));
 
     // Clear cart as the customer placed the order
     setCart([]);
@@ -906,24 +963,33 @@ export default function App() {
             {healthZoneProducts.map((p, idx) => {
               // Custom indicators
               const isHighlight = p.id === "hz-1" || p.id === "hz-6";
+              const isSoldOut = soldOutIds.includes(p.id) || p.availableQuantity === 0;
+              const inCartCount = cart.find(item => item.product.id === p.id)?.quantity || 0;
               
               return (
                 <div
                   key={`${p.id}-${idx}`}
+                  onClick={() => setQuickViewProduct(p)}
                   className={`relative flex flex-col justify-between overflow-hidden rounded-[24px] border transition-all duration-300 card-glow ${
+                    isSoldOut
+                      ? "opacity-75 cursor-pointer"
+                      : "hover:-translate-y-2 cursor-pointer"
+                  } ${
                     isHighlight
                       ? "bg-gradient-to-b from-deep-green to-dark-greenish-black border-lime-green/40 shadow-xl text-white lg:col-span-1"
                       : "bg-white border-deep-green/5 hover:border-deep-green/15 shadow-md shadow-deep-green/5 text-dark-greenish-black"
-                  } hover:-translate-y-2 group`}
+                  } group`}
                 >
                   
                   {/* Image Header */}
-                  <div className="relative h-56 overflow-hidden">
+                  <div className="relative h-56 overflow-hidden bg-stone-900">
                     <img
                       src={p.bentoImage || p.image}
                       alt={p.name}
                       referrerPolicy="no-referrer"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-90"
+                      className={`w-full h-full object-cover transition-transform duration-500 opacity-90 ${
+                        isSoldOut ? "grayscale contrast-75" : "group-hover:scale-105"
+                      }`}
                     />
                     
                     {/* Floating Badges inside Card Image */}
@@ -953,6 +1019,15 @@ export default function App() {
                       <span className={`text-[9px] font-mono font-bold block ${isHighlight ? "text-stone-300" : "text-stone-500"}`}>Calories</span>
                       <span className={`text-xs font-bold ${isHighlight ? "text-lime-green" : "text-deep-green"}`}>{p.calories} kcal ({p.servingSize})</span>
                     </div>
+
+                    {/* Sold out overlay banner */}
+                    {isSoldOut && (
+                      <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center">
+                        <span className="bg-red-600 text-white font-manrope font-black text-[11px] uppercase tracking-wider px-3.5 py-1.5 rounded-full shadow-md border border-red-500/35 animate-pulse">
+                          Sold Out
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Body Info */}
@@ -960,15 +1035,26 @@ export default function App() {
                     <div>
                       <div className="flex justify-between items-baseline gap-2 mb-2">
                         <h3 className={`font-manrope font-extrabold text-base transition-colors ${
-                          isHighlight ? "text-cream-white group-hover:text-lime-green" : "text-dark-greenish-black group-hover:text-deep-green"
+                          isSoldOut
+                            ? "text-stone-400 line-through"
+                            : isHighlight
+                            ? "text-cream-white group-hover:text-lime-green"
+                            : "text-dark-greenish-black group-hover:text-deep-green"
                         }`}>
                           {p.name}
                         </h3>
-                        <span className={`font-manrope font-black text-base shrink-0 ${
-                          isHighlight ? "text-lime-green" : "text-deep-green"
-                        }`}>
-                          ₹{p.price}
-                        </span>
+                        <div className="text-right shrink-0">
+                          <span className={`font-manrope font-black text-base block ${
+                            isSoldOut
+                              ? "text-stone-400"
+                              : isHighlight
+                              ? "text-lime-green"
+                              : "text-deep-green"
+                          }`}>
+                            ₹{p.price}
+                          </span>
+                          {renderStockLevel(p)}
+                        </div>
                       </div>
                       
                       <p className={`text-xs leading-relaxed font-sans mt-1.5 ${
@@ -998,31 +1084,63 @@ export default function App() {
                     </div>
 
                     {/* Quick Order Buttons for Health Zone */}
-                    <div className={`grid grid-cols-2 gap-3 pt-4 border-t ${isHighlight ? "border-white/10" : "border-deep-green/5"}`}>
-                      <button
-                        onClick={() => addToCart(p)}
-                        className={`text-xs font-bold font-manrope px-3 py-2.5 rounded-full transition-all ${
-                          lastAddedItem === p.id 
-                            ? "bg-fresh-green text-white animate-pulse-soft" 
-                            : isHighlight 
-                            ? "bg-white/10 hover:bg-white/20 text-cream-white"
-                            : "bg-deep-green/5 hover:bg-deep-green/10 text-deep-green"
-                        }`}
-                      >
-                        {lastAddedItem === p.id ? "✓ Added" : "+ Add to Order"}
-                      </button>
-                      
-                      <button
-                        onClick={(e) => handleOrderSingleProduct(p, e)}
-                        className={`font-manrope text-xs font-extrabold px-3 py-2.5 rounded-full flex items-center justify-center gap-1.5 transition-all text-center cursor-pointer ${
-                          isHighlight
-                            ? "bg-lime-green hover:bg-lime-green/90 text-deep-green"
-                            : "bg-[#25D366] hover:bg-[#20ba5a] text-white shadow-md shadow-green-500/15"
-                        }`}
-                      >
-                        <WhatsAppIcon className="w-3.5 h-3.5" />
-                        Order Now
-                      </button>
+                    <div className={`grid grid-cols-2 gap-3 pt-4 border-t ${isHighlight ? "border-white/10" : "border-deep-green/5"}`} onClick={(e) => e.stopPropagation()}>
+                      {isSoldOut ? (
+                        <div className="col-span-2 py-2.5 text-center text-xs font-bold font-manrope bg-stone-100/10 border border-stone-200/20 text-stone-400 rounded-full select-none">
+                          Temporarily Unavailable
+                        </div>
+                      ) : (
+                        <>
+                          {inCartCount > 0 ? (
+                            <div className={`flex items-center justify-between rounded-full px-2 py-1 select-none border ${
+                              isHighlight
+                                ? "bg-white/10 border-white/20"
+                                : "bg-fresh-green/10 border-fresh-green/20"
+                            }`}>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); removeFromCart(p.id, e); }}
+                                className={`p-1 hover:bg-beige/40 rounded-full ${isHighlight ? "text-cream-white" : "text-deep-green"}`}
+                                title="Reduce Quantity"
+                              >
+                                <Minus className="w-3 h-3" />
+                              </button>
+                              <span className={`text-[10px] font-black font-manrope ${isHighlight ? "text-cream-white" : "text-deep-green"}`}>✓ {inCartCount} Added</span>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); addToCart(p, e); }}
+                                className={`p-1 hover:bg-beige/40 rounded-full ${isHighlight ? "text-cream-white" : "text-deep-green"}`}
+                                title="Increase Quantity"
+                              >
+                                <Plus className="w-3 h-3" />
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => addToCart(p)}
+                              className={`text-xs font-bold font-manrope px-3 py-2.5 rounded-full transition-all ${
+                                lastAddedItem === p.id 
+                                  ? "bg-fresh-green text-white animate-pulse-soft" 
+                                  : isHighlight 
+                                  ? "bg-white/10 hover:bg-white/20 text-cream-white"
+                                  : "bg-deep-green/5 hover:bg-deep-green/10 text-deep-green"
+                              }`}
+                            >
+                              {lastAddedItem === p.id ? "✓ Added" : "+ Add to Order"}
+                            </button>
+                          )}
+                          
+                          <button
+                            onClick={(e) => handleOrderSingleProduct(p, e)}
+                            className={`font-manrope text-xs font-extrabold px-3 py-2.5 rounded-full flex items-center justify-center gap-1.5 transition-all text-center cursor-pointer ${
+                              isHighlight
+                                ? "bg-lime-green hover:bg-lime-green/90 text-deep-green"
+                                : "bg-[#25D366] hover:bg-[#20ba5a] text-white shadow-md shadow-green-500/15"
+                            }`}
+                          >
+                            <WhatsAppIcon className="w-3.5 h-3.5" />
+                            Order Now
+                          </button>
+                        </>
+                      )}
                     </div>
 
                   </div>
@@ -1102,24 +1220,33 @@ export default function App() {
             {womenHealthProducts.map((p, idx) => {
               // Custom indicators
               const isHighlight = p.id === "wh-1" || p.id === "wh-3";
+              const isSoldOut = soldOutIds.includes(p.id) || p.availableQuantity === 0;
+              const inCartCount = cart.find(item => item.product.id === p.id)?.quantity || 0;
               
               return (
                 <div
                   key={`${p.id}-${idx}`}
+                  onClick={() => setQuickViewProduct(p)}
                   className={`relative flex flex-col justify-between overflow-hidden rounded-[24px] border transition-all duration-300 card-glow ${
+                    isSoldOut
+                      ? "opacity-75 cursor-pointer"
+                      : "hover:-translate-y-2 cursor-pointer"
+                  } ${
                     isHighlight
                       ? "bg-gradient-to-b from-[#3b121c] to-[#1a050a] border-rose-900/40 shadow-xl text-white lg:col-span-1"
                       : "bg-white border-deep-green/5 hover:border-deep-green/15 shadow-md shadow-deep-green/5 text-dark-greenish-black"
-                  } hover:-translate-y-2 group`}
+                  } group`}
                 >
                   
                   {/* Image Header */}
-                  <div className="relative h-56 overflow-hidden">
+                  <div className="relative h-56 overflow-hidden bg-stone-900">
                     <img
                       src={p.bentoImage || p.image}
                       alt={p.name}
                       referrerPolicy="no-referrer"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-90"
+                      className={`w-full h-full object-cover transition-transform duration-500 opacity-90 ${
+                        isSoldOut ? "grayscale contrast-75" : "group-hover:scale-105"
+                      }`}
                     />
                     
                     {/* Floating Badges inside Card Image */}
@@ -1153,6 +1280,15 @@ export default function App() {
                       <span className={`text-[9px] font-mono font-bold block ${isHighlight ? "text-stone-300" : "text-stone-500"}`}>Calories</span>
                       <span className={`text-xs font-bold ${isHighlight ? "text-pink-300" : "text-deep-green"}`}>{p.calories} kcal ({p.servingSize})</span>
                     </div>
+
+                    {/* Sold out overlay banner */}
+                    {isSoldOut && (
+                      <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center">
+                        <span className="bg-red-600 text-white font-manrope font-black text-[11px] uppercase tracking-wider px-3.5 py-1.5 rounded-full shadow-md border border-red-500/35 animate-pulse">
+                          Sold Out
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Body Info */}
@@ -1160,15 +1296,24 @@ export default function App() {
                     <div>
                       <div className="flex justify-between items-baseline gap-2 mb-2">
                         <h3 className={`font-manrope font-extrabold text-base transition-colors ${
-                          isHighlight ? "text-cream-white group-hover:text-pink-300" : "text-dark-greenish-black group-hover:text-pink-600"
+                          isSoldOut
+                            ? "text-stone-400 line-through"
+                            : isHighlight
+                            ? "text-cream-white group-hover:text-pink-300"
+                            : "text-dark-greenish-black group-hover:text-pink-600"
                         }`}>
                           {p.name}
                         </h3>
-                        <span className={`font-manrope font-black text-base shrink-0 ${
-                          isHighlight ? "text-pink-300" : "text-deep-green"
-                        }`}>
-                          ₹{p.price}
-                        </span>
+                        <div className="text-right shrink-0">
+                          <span className={`font-manrope font-black text-base block ${
+                            isSoldOut
+                              ? "text-stone-400"
+                              : isHighlight ? "text-pink-300" : "text-deep-green"
+                          }`}>
+                            ₹{p.price}
+                          </span>
+                          {renderStockLevel(p)}
+                        </div>
                       </div>
                       
                       <p className={`text-xs leading-relaxed font-sans mt-1.5 ${
@@ -1203,31 +1348,63 @@ export default function App() {
                     </div>
 
                     {/* Quick Order Buttons */}
-                    <div className={`grid grid-cols-2 gap-3 pt-4 border-t ${isHighlight ? "border-white/10" : "border-deep-green/5"}`}>
-                      <button
-                        onClick={(e) => addToCart(p, e)}
-                        className={`text-xs font-bold font-manrope px-3 py-2.5 rounded-full transition-all ${
-                          lastAddedItem === p.id 
-                            ? "bg-pink-600 text-white animate-pulse-soft" 
-                            : isHighlight 
-                            ? "bg-white/10 hover:bg-white/20 text-cream-white"
-                            : "bg-deep-green/5 hover:bg-deep-green/10 text-deep-green"
-                        }`}
-                      >
-                        {lastAddedItem === p.id ? "✓ Added" : "+ Add to Order"}
-                      </button>
-                      
-                      <button
-                        onClick={(e) => handleOrderSingleProduct(p, e)}
-                        className={`font-manrope text-xs font-extrabold px-3 py-2.5 rounded-full flex items-center justify-center gap-1.5 transition-all text-center cursor-pointer ${
-                          isHighlight
-                            ? "bg-pink-500 hover:bg-pink-600 text-white"
-                            : "bg-[#25D366] hover:bg-[#20ba5a] text-white shadow-md shadow-green-500/15"
-                        }`}
-                      >
-                        <WhatsAppIcon className="w-3.5 h-3.5" />
-                        Order Now
-                      </button>
+                    <div className={`grid grid-cols-2 gap-3 pt-4 border-t ${isHighlight ? "border-white/10" : "border-deep-green/5"}`} onClick={(e) => e.stopPropagation()}>
+                      {isSoldOut ? (
+                        <div className="col-span-2 py-2.5 text-center text-xs font-bold font-manrope bg-stone-100/10 border border-stone-200/20 text-stone-400 rounded-full select-none">
+                          Temporarily Unavailable
+                        </div>
+                      ) : (
+                        <>
+                          {inCartCount > 0 ? (
+                            <div className={`flex items-center justify-between rounded-full px-2 py-1 select-none border ${
+                              isHighlight
+                                ? "bg-white/10 border-white/20"
+                                : "bg-fresh-green/10 border-fresh-green/20"
+                            }`}>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); removeFromCart(p.id, e); }}
+                                className={`p-1 hover:bg-beige/40 rounded-full ${isHighlight ? "text-cream-white" : "text-deep-green"}`}
+                                title="Reduce Quantity"
+                              >
+                                <Minus className="w-3 h-3" />
+                              </button>
+                              <span className={`text-[10px] font-black font-manrope ${isHighlight ? "text-cream-white" : "text-deep-green"}`}>✓ {inCartCount} Added</span>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); addToCart(p, e); }}
+                                className={`p-1 hover:bg-beige/40 rounded-full ${isHighlight ? "text-cream-white" : "text-deep-green"}`}
+                                title="Increase Quantity"
+                              >
+                                <Plus className="w-3 h-3" />
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={(e) => addToCart(p, e)}
+                              className={`text-xs font-bold font-manrope px-3 py-2.5 rounded-full transition-all ${
+                                lastAddedItem === p.id 
+                                  ? "bg-pink-600 text-white animate-pulse-soft" 
+                                  : isHighlight 
+                                  ? "bg-white/10 hover:bg-white/20 text-cream-white"
+                                  : "bg-deep-green/5 hover:bg-deep-green/10 text-deep-green"
+                              }`}
+                            >
+                              {lastAddedItem === p.id ? "✓ Added" : "+ Add to Order"}
+                            </button>
+                          )}
+                          
+                          <button
+                            onClick={(e) => handleOrderSingleProduct(p, e)}
+                            className={`font-manrope text-xs font-extrabold px-3 py-2.5 rounded-full flex items-center justify-center gap-1.5 transition-all text-center cursor-pointer ${
+                              isHighlight
+                                ? "bg-pink-500 hover:bg-pink-600 text-white"
+                                : "bg-[#25D366] hover:bg-[#20ba5a] text-white shadow-md shadow-green-500/15"
+                            }`}
+                          >
+                            <WhatsAppIcon className="w-3.5 h-3.5" />
+                            Order Now
+                          </button>
+                        </>
+                      )}
                     </div>
 
                   </div>
@@ -1312,12 +1489,17 @@ export default function App() {
             {filteredProducts.map((p, idx) => {
               const inCartCount = cart.find(item => item.product.id === p.id)?.quantity || 0;
               const isAddedJustNow = lastAddedItem === p.id;
+              const isSoldOut = soldOutIds.includes(p.id) || p.availableQuantity === 0;
 
               return (
                 <div
                   key={`${p.id}-${idx}`}
                   onClick={() => setQuickViewProduct(p)}
-                  className="bg-white rounded-[24px] border border-deep-green/15 shadow-md shadow-deep-green/5 hover:shadow-lg hover:border-fresh-green/35 transition-all duration-300 hover:-translate-y-1 group flex flex-col justify-between overflow-hidden cursor-pointer"
+                  className={`bg-white rounded-[24px] border border-deep-green/15 shadow-md shadow-deep-green/5 ${
+                    isSoldOut
+                      ? "opacity-75"
+                      : "hover:shadow-lg hover:border-fresh-green/35 transition-all duration-300 hover:-translate-y-1"
+                  } group flex flex-col justify-between overflow-hidden cursor-pointer`}
                 >
                   
                   {/* Card Thumbnail Image */}
@@ -1326,7 +1508,9 @@ export default function App() {
                       src={p.image}
                       alt={p.name}
                       referrerPolicy="no-referrer"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      className={`w-full h-full object-cover transition-transform duration-500 ${
+                        isSoldOut ? "grayscale contrast-75" : "group-hover:scale-105"
+                      }`}
                     />
                     
                     {/* Badge Category label */}
@@ -1340,18 +1524,36 @@ export default function App() {
                         {inCartCount} in order
                       </div>
                     )}
+
+                    {/* Sold out overlay banner */}
+                    {isSoldOut && (
+                      <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center">
+                        <span className="bg-red-600 text-white font-manrope font-black text-[11px] uppercase tracking-wider px-3.5 py-1.5 rounded-full shadow-md border border-red-500/35 animate-pulse">
+                          Sold Out
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Info Column */}
                   <div className="p-5 flex-1 flex flex-col justify-between gap-3 text-left">
                     <div>
                       <div className="flex justify-between items-start gap-2">
-                        <h3 className="font-manrope font-extrabold text-sm text-dark-greenish-black group-hover:text-fresh-green transition-colors leading-snug line-clamp-2">
+                        <h3 className={`font-manrope font-extrabold text-sm ${
+                          isSoldOut 
+                            ? "text-stone-400 line-through" 
+                            : "text-dark-greenish-black group-hover:text-fresh-green"
+                        } transition-colors leading-snug line-clamp-2`}>
                           {p.name}
                         </h3>
-                        <span className="font-manrope font-black text-sm text-deep-green shrink-0">
-                          ₹{p.price}
-                        </span>
+                        <div className="text-right shrink-0">
+                          <span className={`font-manrope font-black text-sm block ${
+                            isSoldOut ? "text-stone-400" : "text-deep-green"
+                          }`}>
+                            ₹{p.price}
+                          </span>
+                          {renderStockLevel(p)}
+                        </div>
                       </div>
                       
                       <p className="text-xs text-soft-gray leading-relaxed font-sans line-clamp-2 mt-1.5">
@@ -1361,44 +1563,52 @@ export default function App() {
 
                     {/* Button Operations */}
                     <div className="grid grid-cols-2 gap-2 pt-3 border-t border-deep-green/5" onClick={(e) => e.stopPropagation()}>
-                      {inCartCount > 0 ? (
-                        <div className="flex items-center justify-between bg-cream-white rounded-full px-2 py-1 select-none border border-deep-green/5">
-                          <button
-                            onClick={(e) => removeFromCart(p.id, e)}
-                            className="p-1 hover:bg-beige/40 rounded-full text-deep-green"
-                            title="Reduce Quantity"
-                          >
-                            <Minus className="w-3.5 h-3.5" />
-                          </button>
-                          <span className="text-xs font-bold font-manrope text-deep-green">{inCartCount}</span>
-                          <button
-                            onClick={(e) => addToCart(p, e)}
-                            className="p-1 hover:bg-beige/40 rounded-full text-deep-green"
-                            title="Increase Quantity"
-                          >
-                            <Plus className="w-3.5 h-3.5" />
-                          </button>
+                      {isSoldOut ? (
+                        <div className="col-span-2 py-2 text-center text-xs font-bold font-manrope bg-stone-100 text-stone-400 rounded-full border border-stone-200 select-none">
+                          Temporarily Unavailable
                         </div>
                       ) : (
-                        <button
-                          onClick={(e) => addToCart(p, e)}
-                          className={`text-xs font-bold font-manrope px-3 py-2 rounded-full transition-all ${
-                            isAddedJustNow
-                              ? "bg-fresh-green text-white"
-                              : "bg-deep-green/5 text-deep-green hover:bg-deep-green/10"
-                          }`}
-                        >
-                          {isAddedJustNow ? "✓ Added" : "+ Add"}
-                        </button>
-                      )}
+                        <>
+                          {inCartCount > 0 ? (
+                            <div className="flex items-center justify-between bg-fresh-green/10 border border-fresh-green/20 rounded-full px-2 py-1 select-none">
+                              <button
+                                onClick={(e) => removeFromCart(p.id, e)}
+                                className="p-1 hover:bg-beige/40 rounded-full text-deep-green"
+                                title="Reduce Quantity"
+                              >
+                                <Minus className="w-3 h-3" />
+                              </button>
+                              <span className="text-[10px] font-black font-manrope text-deep-green">✓ {inCartCount} Added</span>
+                              <button
+                                onClick={(e) => addToCart(p, e)}
+                                className="p-1 hover:bg-beige/40 rounded-full text-deep-green"
+                                title="Increase Quantity"
+                              >
+                                <Plus className="w-3 h-3" />
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={(e) => addToCart(p, e)}
+                              className={`text-xs font-bold font-manrope px-3 py-2 rounded-full transition-all ${
+                                isAddedJustNow
+                                  ? "bg-fresh-green text-white"
+                                  : "bg-deep-green/5 text-deep-green hover:bg-deep-green/10"
+                              }`}
+                            >
+                              {isAddedJustNow ? "✓ Added" : "+ Add"}
+                            </button>
+                          )}
 
-                      <button
-                        onClick={(e) => handleOrderSingleProduct(p, e)}
-                        className="bg-lime-green hover:bg-lime-green/95 text-deep-green font-manrope text-xs font-extrabold px-3 py-2 rounded-full flex items-center justify-center gap-1 transition-all text-center cursor-pointer"
-                      >
-                        <WhatsAppIcon className="w-3 h-3" />
-                        Order
-                      </button>
+                          <button
+                            onClick={(e) => handleOrderSingleProduct(p, e)}
+                            className="bg-lime-green hover:bg-lime-green/95 text-deep-green font-manrope text-xs font-extrabold px-3 py-2 rounded-full flex items-center justify-center gap-1 transition-all text-center cursor-pointer"
+                          >
+                            <WhatsAppIcon className="w-3 h-3" />
+                            Order
+                          </button>
+                        </>
+                      )}
                     </div>
 
                   </div>
@@ -1814,113 +2024,148 @@ export default function App() {
       )}
 
       {/* 10. PRODUCT QUICK VIEW MODAL COMPONENT */}
-      {quickViewProduct && (
-        <div className="fixed inset-0 z-50 overflow-hidden flex items-center justify-center px-4">
-          <div
-            onClick={() => setQuickViewProduct(null)}
-            className="absolute inset-0 bg-[#0F3D2E]/50 backdrop-blur-xs transition-opacity"
-          ></div>
+      {quickViewProduct && (() => {
+        const inCartCount = cart.find(item => item.product.id === quickViewProduct.id)?.quantity || 0;
+        const isSoldOut = soldOutIds.includes(quickViewProduct.id) || quickViewProduct.availableQuantity === 0;
+        
+        return (
+          <div className="fixed inset-0 z-50 overflow-hidden flex items-center justify-center px-4">
+            <div
+              onClick={() => setQuickViewProduct(null)}
+              className="absolute inset-0 bg-[#0F3D2E]/50 backdrop-blur-xs transition-opacity"
+            ></div>
 
-          <div className="relative bg-white text-dark-greenish-black rounded-[28px] overflow-hidden shadow-2xl max-w-lg w-full z-10 border border-deep-green/10 animate-fade-in text-left">
-            
-            {/* Thumbnail Image */}
-            <div className="relative h-64 bg-stone-100">
-              <img
-                src={quickViewProduct.image}
-                alt={quickViewProduct.name}
-                referrerPolicy="no-referrer"
-                className="w-full h-full object-cover"
-              />
-              <button
-                onClick={() => setQuickViewProduct(null)}
-                className="absolute top-4 right-4 bg-black/60 hover:bg-black text-white p-2 rounded-full border border-white/10"
-              >
-                <X className="w-4 h-4" />
-              </button>
+            <div className="relative bg-white text-dark-greenish-black rounded-[28px] overflow-hidden shadow-2xl max-w-lg w-full z-10 border border-deep-green/10 animate-fade-in text-left">
+              
+              {/* Thumbnail Image */}
+              <div className="relative h-64 bg-stone-100">
+                <img
+                  src={quickViewProduct.image}
+                  alt={quickViewProduct.name}
+                  referrerPolicy="no-referrer"
+                  className="w-full h-full object-cover"
+                />
+                <button
+                  onClick={() => setQuickViewProduct(null)}
+                  className="absolute top-4 right-4 bg-black/60 hover:bg-black text-white p-2 rounded-full border border-white/10"
+                >
+                  <X className="w-4 h-4" />
+                </button>
 
-              <div className="absolute top-4 left-4">
-                <span className="bg-deep-green text-lime-green text-[10px] uppercase font-mono font-bold px-3 py-1 rounded-full border border-white/5">
-                  {CATEGORIES.find(c => c.id === quickViewProduct.category)?.name}
-                </span>
-              </div>
-            </div>
-
-            {/* Modal Body */}
-            <div className="p-6 sm:p-8 flex flex-col gap-4">
-              <div>
-                <div className="flex justify-between items-baseline gap-4">
-                  <h3 className="font-manrope font-extrabold text-xl text-deep-green">
-                    {quickViewProduct.name}
-                  </h3>
-                  <span className="font-manrope font-black text-xl text-fresh-green">
-                    ₹{quickViewProduct.price}
+                <div className="absolute top-4 left-4">
+                  <span className="bg-deep-green text-lime-green text-[10px] uppercase font-mono font-bold px-3 py-1 rounded-full border border-white/5">
+                    {CATEGORIES.find(c => c.id === quickViewProduct.category)?.name}
                   </span>
                 </div>
-                {quickViewProduct.calories && (
-                  <span className="text-xs font-mono text-soft-gray mt-1.5 block">
-                    ⚡ Serving: {quickViewProduct.servingSize} • Calories: {quickViewProduct.calories} kcal
-                  </span>
-                )}
               </div>
 
-              <p className="text-xs text-stone-600 leading-relaxed font-sans">
-                {quickViewProduct.description}
-              </p>
+              {/* Modal Body */}
+              <div className="p-6 sm:p-8 flex flex-col gap-4">
+                <div>
+                  <div className="flex justify-between items-baseline gap-4">
+                    <h3 className="font-manrope font-extrabold text-xl text-deep-green">
+                      {quickViewProduct.name}
+                    </h3>
+                    <div className="text-right">
+                      <span className="font-manrope font-black text-xl text-fresh-green block">
+                        ₹{quickViewProduct.price}
+                      </span>
+                      {renderStockLevel(quickViewProduct)}
+                    </div>
+                  </div>
+                  {quickViewProduct.calories && (
+                    <span className="text-xs font-mono text-soft-gray mt-1.5 block">
+                      ⚡ Serving: {quickViewProduct.servingSize} • Calories: {quickViewProduct.calories} kcal
+                    </span>
+                  )}
+                </div>
 
-              {/* Tag Details */}
-              <div className="flex flex-wrap gap-2 pt-1">
-                {(quickViewProduct.isSugarFree || quickViewProduct.category === "health-zone") && (
-                  <span className="bg-lime-green/25 text-deep-green text-[10px] font-black uppercase px-2.5 py-1 rounded-full border border-deep-green/10">
-                    🚫 No Sugar
-                  </span>
-                )}
-                {quickViewProduct.isHighProtein && (
-                  <span className="bg-orange-cta/10 text-orange-cta text-[10px] font-black uppercase px-2.5 py-1 rounded-full">
-                    💪 High Protein
-                  </span>
-                )}
-                {quickViewProduct.isPcodFriendly && (
-                  <span className="bg-purple-50 text-purple-700 text-[10px] font-black uppercase px-2.5 py-1 rounded-full bg-purple-550/10">
-                    ♀️ PCOD Friendly
-                  </span>
-                )}
-                {quickViewProduct.isGymFriendly && (
-                  <span className="bg-fresh-green/10 text-fresh-green text-[10px] font-black uppercase px-2.5 py-1 rounded-full">
-                    🏋️ Gym Friendly
-                  </span>
-                )}
-              </div>
+                <p className="text-xs text-stone-600 leading-relaxed font-sans">
+                  {quickViewProduct.description}
+                </p>
 
-              {/* Action Operations inside Quick view */}
-              <div className="grid grid-cols-2 gap-3 pt-4 border-t border-stone-100 mt-2">
-                <button
-                  onClick={() => {
-                    addToCart(quickViewProduct);
-                    setQuickViewProduct(null);
-                    setIsCartOpen(true);
-                  }}
-                  className="bg-deep-green/5 hover:bg-deep-green/10 text-deep-green font-manrope text-xs font-bold py-3.5 rounded-full transition-all text-center"
-                >
-                  Add & View Cart
-                </button>
-                
-                <button
-                  onClick={(e) => {
-                    handleOrderSingleProduct(quickViewProduct, e);
-                    setQuickViewProduct(null);
-                  }}
-                  className="bg-[#25D366] hover:bg-[#20ba5a] text-white font-manrope text-xs font-black py-3.5 rounded-full flex items-center justify-center gap-1.5 transition-all text-center shadow-md shadow-green-500/25 cursor-pointer"
-                >
-                  <WhatsAppIcon className="w-4 h-4" />
-                  Order on WhatsApp
-                </button>
+                {/* Tag Details */}
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {(quickViewProduct.isSugarFree || quickViewProduct.category === "health-zone") && (
+                    <span className="bg-lime-green/25 text-deep-green text-[10px] font-black uppercase px-2.5 py-1 rounded-full border border-deep-green/10">
+                      🚫 No Sugar
+                    </span>
+                  )}
+                  {quickViewProduct.isHighProtein && (
+                    <span className="bg-orange-cta/10 text-orange-cta text-[10px] font-black uppercase px-2.5 py-1 rounded-full">
+                      💪 High Protein
+                    </span>
+                  )}
+                  {quickViewProduct.isPcodFriendly && (
+                    <span className="bg-purple-50 text-purple-700 text-[10px] font-black uppercase px-2.5 py-1 rounded-full bg-purple-550/10">
+                      ♀️ PCOD Friendly
+                    </span>
+                  )}
+                  {quickViewProduct.isGymFriendly && (
+                    <span className="bg-fresh-green/10 text-fresh-green text-[10px] font-black uppercase px-2.5 py-1 rounded-full">
+                      🏋️ Gym Friendly
+                    </span>
+                  )}
+                </div>
+
+                {/* Action Operations inside Quick view */}
+                <div className="grid grid-cols-2 gap-3 pt-4 border-t border-stone-100 mt-2">
+                  {isSoldOut ? (
+                    <div className="col-span-2 text-center py-3.5 bg-red-50 text-red-600 font-manrope text-xs font-black rounded-full border border-red-100/50 select-none uppercase tracking-wider animate-pulse-soft">
+                      ⚠️ Currently Out of Stock
+                    </div>
+                  ) : (
+                    <>
+                      {inCartCount > 0 ? (
+                        <div className="flex items-center justify-between bg-fresh-green/10 border border-fresh-green/20 rounded-full px-3 py-1.5 select-none">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); removeFromCart(quickViewProduct.id, e); }}
+                            className="p-1 hover:bg-beige/40 rounded-full text-deep-green"
+                            title="Reduce Quantity"
+                          >
+                            <Minus className="w-3.5 h-3.5" />
+                          </button>
+                          <span className="text-xs font-black font-manrope text-deep-green">✓ {inCartCount} Added</span>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); addToCart(quickViewProduct, e); }}
+                            className="p-1 hover:bg-beige/40 rounded-full text-deep-green"
+                            title="Increase Quantity"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            addToCart(quickViewProduct);
+                            setIsCartOpen(true);
+                          }}
+                          className="bg-deep-green/5 hover:bg-deep-green/10 text-deep-green font-manrope text-xs font-bold py-3.5 rounded-full transition-all text-center"
+                        >
+                          Add & View Cart
+                        </button>
+                      )}
+                      
+                      <button
+                        onClick={(e) => {
+                          handleOrderSingleProduct(quickViewProduct, e);
+                          setQuickViewProduct(null);
+                        }}
+                        className="bg-[#25D366] hover:bg-[#20ba5a] text-white font-manrope text-xs font-black py-3.5 rounded-full flex items-center justify-center gap-1.5 transition-all text-center shadow-md shadow-green-500/25 cursor-pointer"
+                      >
+                        <WhatsAppIcon className="w-4 h-4" />
+                        Order on WhatsApp
+                      </button>
+                    </>
+                  )}
+                </div>
+
               </div>
 
             </div>
-
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* 11. FOOTER SECTION */}
       <footer className="bg-deep-green text-cream-white pt-16 pb-8 border-t border-white/10 font-sans">
