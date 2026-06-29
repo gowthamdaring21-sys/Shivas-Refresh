@@ -99,8 +99,25 @@ export default function App() {
 
   // Cart state
   const [cart, setCart] = useState<OrderItem[]>([]);
+  const [isCartLoaded, setIsCartLoaded] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [lastAddedItem, setLastAddedItem] = useState<string | null>(null);
+
+  // Load cart from local storage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("shiva_refresh_cart");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          setCart(parsed);
+        }
+      }
+    } catch (e) {
+      console.error("Error loading cart from localStorage:", e);
+    }
+    setIsCartLoaded(true);
+  }, []);
 
   // Quick View Product state
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
@@ -167,6 +184,33 @@ export default function App() {
       clearInterval(interval);
     };
   }, []);
+
+  // Save cart to local storage and sync with fresh catalog product data
+  useEffect(() => {
+    if (!isCartLoaded) return;
+    try {
+      localStorage.setItem("shiva_refresh_cart", JSON.stringify(cart));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [cart, isCartLoaded]);
+
+  // Sync cart product references when catalog changes
+  useEffect(() => {
+    if (!isCartLoaded) return;
+    setCart((prevCart) => {
+      let updated = false;
+      const nextCart = prevCart.map((item) => {
+        const freshProduct = productsState.find((p) => p.id === item.product.id);
+        if (freshProduct && (freshProduct.price !== item.product.price || freshProduct.name !== item.product.name)) {
+          updated = true;
+          return { ...item, product: freshProduct };
+        }
+        return item;
+      });
+      return updated ? nextCart : prevCart;
+    });
+  }, [productsState, isCartLoaded]);
 
   const [orders, setOrders] = useState<SimulatedOrder[]>(() => {
     try {
